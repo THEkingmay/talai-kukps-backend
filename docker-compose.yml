@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+    redis:
+        image: redis:7-alpine
+        container_name: fleet_redis
+        restart: unless-stopped
+        command: redis-server --appendonly yes
+        ports:
+            # แมปพอร์ต 6379 ออกมาให้ Node.js ที่รันอยู่ข้างนอกเรียกใช้ได้
+            # 127.0.0.1 เพื่อความปลอดภัย ไม่ให้คนนอกอินเทอร์เน็ตยิงเข้ามาได้
+            - "127.0.0.1:6379:6379"
+        volumes:
+            - redis_data:/data
+    # server:
+    #     image: <image_path>
+    #     container_name: kukps-talai-server
+    #     restart: unless-stopped
+    #     ports:
+    #         - "3000:3000"
+    #     environment:
+    #         - REDIS_URL=redis://redis:6379
+    #     env_file:
+    #         - .env
+volumes:
+    redis_data:
