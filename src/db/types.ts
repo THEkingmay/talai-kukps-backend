@@ -25,10 +25,12 @@ const latSchema = z.number().min(-90).max(90);
 const lngSchema = z.number().min(-180).max(180);
 
 export const selectUserSchema = createSelectSchema(users);
-export const insertUserSchema = createInsertSchema(users, {
-    email: (schema) => schema.email(),
-});
-
+export const dbInsertUserSchema = createInsertSchema(users);
+export const insertUserSchema = dbInsertUserSchema
+    .omit({ hashPassword: true })
+    .extend({
+        password: z.string().min(8, "Password ต้องมีอย่างน้อย 8 ตัวอักษร"),
+    });
 export type User = z.infer<typeof selectUserSchema>;
 export type NewUser = z.infer<typeof insertUserSchema>;
 

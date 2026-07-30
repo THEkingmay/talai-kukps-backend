@@ -1,7 +1,7 @@
 import { Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import type { Request } from "express";
-import type { WebSocketLocationBroadcastType } from "../db/custom-types.ts";
+import type { WebSocketLocationBroadcastType } from "../types/index.ts";
 
 interface CustomWebSocket extends WebSocket {
     isAlive: boolean;
@@ -11,19 +11,31 @@ interface CustomWebSocket extends WebSocket {
 class WebSocketService {
     private wss: WebSocketServer | null = null;
 
+    private ipConnectionCount = new Map<string, number>();
     init(server: Server) {
         this.wss = new WebSocketServer({ server });
         this.wss.on("connection", (ws: CustomWebSocket, req: Request) => {
             ws.isAlive = true;
-            ws.ip = req.socket.remoteAddress;
+            const ip = ws.ip;
+            if (!ip) return;
+
+            const currentCount = this.ipConnectionCount.get(ip) || 0;
+
+            if (currentCount >= 5) {
+                // ห้าม 1 IP ต่อเกิน 5 สาย
+                console.warn(`[WebSocket] IP ${ip} exceeded connection limit.`);
+                ws.close(1008, "Too many connections from this IP");
+                return;
+            }
+
+            this.ipConnectionCount.set(ip, currentCount + 1);
 
             ws.on("close", () => {
                 console.log(
                     `❌ [WebSocket] Client disconnected (${ws.ip || "Anonymous"})`,
                 );
+                this.ipConnectionCount.set(ip, currentCount - 1);
             });
-
-            // 3. ดักจับ Error
             ws.on("error", (err) => {
                 console.error("⚠️ [WebSocket Error]:", err.message);
             });

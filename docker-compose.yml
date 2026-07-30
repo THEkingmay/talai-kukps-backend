@@ -11,15 +11,13 @@ services:
             - "127.0.0.1:6379:6379"
         volumes:
             - redis_data:/data
-    # server:
-    #     image: <image_path>
-    #     container_name: kukps-talai-server
-    #     restart: unless-stopped
-    #     ports:
-    #         - "3000:3000"
-    #     environment:
-    #         - REDIS_URL=redis://redis:6379
-    #     env_file:
-    #         - .env
+    server:
+        build: .
+        container_name: kukps-talai-server
+        restart: unless-stopped
+        ports:
+            - "3000:3000"
+        env_file:
+            - .env
 volumes:
     redis_data:

@@ -5,10 +5,12 @@ import cookieParser from "cookie-parser";
 import redisService from "./services/redis.service.ts";
 import mqttService from "./services/mqtt.service.ts";
 import websocketService from "./services/websocket.service.ts";
-
-import usersRouter from "./routes/users.route.ts";
-import authRouter from "./routes/auth.route.ts";
+import router from "./routes/index.ts";
+import { errorMiddleware } from "./middlewares/error.middleware.ts";
+import type { MqttMessageType } from "./types/index.ts";
+import { insertMany } from "./modules/car-history-logs/car-history-logs.service.ts";
 import http from "http";
+import type { NewCarHistoryLog } from "./db/types.ts";
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ async function bootstrap() {
     );
     app.set("trust proxy", 1);
     app.use(cookieParser());
+    app.use(router);
+    app.use(errorMiddleware);
 
     await redisService.connect(process.env.REDIS_URL!);
     mqttService.connect(process.env.MQTT_URL!, {
@@ -30,18 +34,19 @@ async function bootstrap() {
         password: process.env.MQTT_SERVER_PASSWORD,
     });
     mqttService.onMessage(async (topic, payload) => {
+        // cars/carId = {status:string , lat:number, lng:number , createdAt:string}
         try {
             console.log(
                 `[MQTT] Message received on topic ${topic}: ${payload}`,
             );
+            const carId = topic.replace("cars/", "");
 
-            // ได้รับตำแหฟน่งใหม่แล้วบรรทึกลง redis และให้ websocket broadcast ตำแหน่งใหม่กลับไปยัง client
-            // รถต้องส่งข้อมูลมาในรูปแบบ cars/carId = {lat, lng, created_at} สามารถตัดเอา id ของรถได้
-            // บันทึกลง redis ในรุปแบบ key car:carid และ value = {lat, lng, created_at}
-            // hSet('car:carid', {lat, lng, created_at})
-            const data = JSON.parse(payload.toString());
-            websocketService.broadcast(data);
-            redisService.hSet(`car:${data.carId}`, data); // บันทึกไว้ให้ setTinterval วนมาบันทึก logs ทุก ๆ 60 วินาที
+            const data: MqttMessageType = JSON.parse(payload.toString());
+            websocketService.broadcast({
+                carId,
+                ...data,
+            }); // boardcast ไปหา client ทั้งหมด
+            redisService.hSet(`car:${carId}`, data); // บันทึกไว้ให้ setTinterval วนมาบันทึก logs ทุก ๆ 60 วินาที
         } catch (error) {
             console.error(
                 `[MQTT] Error processing message on topic ${topic}:`,
@@ -50,14 +55,37 @@ async function bootstrap() {
         }
     });
 
-    app.use("/users", usersRouter);
-    app.use("/auth", authRouter);
-
     const server = http.createServer(app);
     websocketService.init(server);
 
     setInterval(async () => {
-        // ดึงจาก cars/carid ทุกคันมาบันทึกลง car-history-log
+        try {
+            let data: NewCarHistoryLog[] = [];
+            const keys = await redisService.keys("car:*");
+            for (const key of keys) {
+                const carId = key.replace("car:", "");
+                const carData =
+                    await redisService.hGetAll<MqttMessageType>(key);
+                if (
+                    !carData ||
+                    carData.lat === undefined ||
+                    carData.lng === undefined ||
+                    carData.lat === 0 ||
+                    carData.lng === 0
+                )
+                    continue;
+                data.push({
+                    carId,
+                    lat: carData?.lat,
+                    lng: carData?.lng,
+                    createdAt: new Date(carData?.createdAt),
+                });
+            }
+            if (data.length === 0) return;
+            await insertMany(data);
+        } catch (error) {
+            console.error(`[WORKER] : saving car history log error`, error);
+        }
     }, 60000);
 
     server.listen(process.env.PORT || 3000, () => {

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import redisService from "../services/redis.service.ts";
-import type { SessionUserType } from "../db/custom-types.ts";
+import type { SessionUserType } from "../types/index.ts";
 
 export async function sessionMiddleware(
     req: Request,
@@ -9,14 +9,20 @@ export async function sessionMiddleware(
 ) {
     const sessionId = req.cookies.sessionId;
     if (!sessionId) {
-        return res.status(401).send("Unauthorized");
+        return res
+            .status(401)
+            .json({ success: false, message: "Unauthorized" });
     }
-    // ตรวจสอบสิทธิ์ผู้ใช้จาก Redis
-    const users = await redisService.hGetAll<SessionUserType>(
+
+    const user = await redisService.hGetAll<SessionUserType>(
         `session:${sessionId}`,
     );
-    if (!users) {
-        return res.status(401).send("Unauthorized");
+    if (!user) {
+        return res
+            .status(401)
+            .json({ success: false, message: "Unauthorized" });
     }
+
+    req.user = user;
     next();
 }

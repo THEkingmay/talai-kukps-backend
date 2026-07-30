@@ -87,6 +87,11 @@ class RedisService {
         const client = this.ensureConnected();
         await client.hDel(key, field);
     }
+
+    async keys(pattern: string): Promise<string[]> {
+        const client = this.ensureConnected();
+        return await client.keys(pattern);
+    }
 }
 
 export default new RedisService();
