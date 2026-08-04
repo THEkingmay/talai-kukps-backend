@@ -2,6 +2,7 @@
 
 export interface SessionUserType {
     id: string;
+    email: string;
     role: "admin" | "user";
     loginAt: string; // timestampz
 }

@@ -7,12 +7,15 @@ const loginSchema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
 });
+const registerSchema = insertUserSchema.extend({
+    inviteCode: z.string().optional(),
+});
 
 export async function login(req: Request, res: Response, next: NextFunction) {
     try {
         const { email, password } = loginSchema.parse(req.body);
         const result = await authService.login(email, password, res);
-        res.json({ success: true, data: result });
+        res.json({ success: true, user: result });
     } catch (error) {
         next(error);
     }
@@ -24,9 +27,9 @@ export async function register(
     next: NextFunction,
 ) {
     try {
-        const body = insertUserSchema.parse(req.body);
+        const body = registerSchema.parse(req.body);
         const result = await authService.register(body, res);
-        res.status(201).json({ success: true, data: result });
+        res.status(201).json({ success: true, user: result });
     } catch (error) {
         next(error);
     }
@@ -37,6 +40,19 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
         const sessionId = req.cookies.sessionId;
         await authService.logout(sessionId, res);
         res.json({ success: true, message: "Logged out" });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function loginWithSession(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) {
+    try {
+        const user = await authService.loginWithSession(req);
+        res.json({ success: true, user });
     } catch (error) {
         next(error);
     }

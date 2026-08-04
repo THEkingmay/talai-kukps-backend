@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -11,9 +11,17 @@ import type { MqttMessageType } from "./types/index.ts";
 import { insertMany } from "./modules/car-history-logs/car-history-logs.service.ts";
 import http from "http";
 import type { NewCarHistoryLog } from "./db/types.ts";
-
-dotenv.config();
-
+import rateLimit from "express-rate-limit";
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, //15mins
+    limit: 1000, // 1000 req/15mins ~~ 1req/s
+    message: {
+        status: 429,
+        error: "คุณส่ง Request ถี่เกินไป กรุณาลองใหม่ในอีก 15 นาที",
+    },
+    standardHeaders: true, // คืนค่า RateLimit-* ใน Response Header
+    legacyHeaders: false, // ปิด Header แบบเก่า (X-RateLimit-*)
+});
 async function bootstrap() {
     const app: Express = express();
 
@@ -23,10 +31,13 @@ async function bootstrap() {
             credentials: true,
         }),
     );
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
     app.set("trust proxy", 1);
     app.use(cookieParser());
     app.use(router);
     app.use(errorMiddleware);
+    app.use(limiter);
 
     await redisService.connect(process.env.REDIS_URL!);
     mqttService.connect(process.env.MQTT_URL!, {

@@ -66,21 +66,28 @@ class RedisService {
         key: string,
     ): Promise<T | null> {
         const client = this.ensureConnected();
-        const data = await client.hGet(key, "data");
+        const data = await client.hGetAll(key);
 
         if (!data) return null;
 
         try {
-            return JSON.parse(data) as T;
+            return data as T;
         } catch (err) {
             console.error(`[Redis Parse Error] Key: ${key}`, err);
             return null;
         }
     }
 
-    async hSet<T extends object>(key: string, value: T): Promise<void> {
+    async hSet<T extends { [K in keyof T]: string | number }>(
+        key: string,
+        value: T,
+        ttlInSeconds?: number,
+    ): Promise<void> {
         const client = this.ensureConnected();
-        await client.hSet(key, "data", JSON.stringify(value));
+        await client.hSet(key, value);
+        if (ttlInSeconds) {
+            await client.expire(key, ttlInSeconds);
+        }
     }
 
     async hDel(key: string, field: string): Promise<void> {

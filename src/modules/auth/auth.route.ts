@@ -7,5 +7,10 @@ const router = Router();
 router.post("/login", authController.login);
 router.post("/register", authController.register);
 router.get("/logout", sessionMiddleware, authController.logout);
+router.get(
+    "/login-with-session",
+    sessionMiddleware,
+    authController.loginWithSession,
+);
 
 export default router;

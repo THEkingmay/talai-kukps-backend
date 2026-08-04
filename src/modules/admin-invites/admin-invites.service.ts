@@ -23,3 +23,14 @@ export async function invite(
 export async function revoke(email: string): Promise<void> {
     await db.delete(adminInvites).where(eq(adminInvites.email, email));
 }
+
+export async function verify(
+    email: string,
+    inviteCode: string,
+): Promise<boolean> {
+    const invite = await db
+        .select()
+        .from(adminInvites)
+        .where(eq(adminInvites.email, email));
+    return invite.length > 0 && invite[0].inviteCode === inviteCode;
+}

@@ -9,11 +9,13 @@ class MqttService {
         }
 
         this.client = mqtt.connect(brokerUrl, {
+            clientId: `talai-server-${Math.random().toString(16).slice(2, 10)}`, // unique ID ป้องกัน session ชน
             keepalive: 60, // ส่ง Ping ทุก 60 วินาที
-            reconnectPeriod: 2000, // ถ้าหลุด ให้พยายาม Reconnect ทุก 2 วินาที
+            reconnectPeriod: 5000, // ถ้าหลุด ให้พยายาม Reconnect ทุก 5 วินาที
             connectTimeout: 30 * 1000, // Connection Timeout 30 วินาที
             resubscribe: true,
-            port: 8883,
+            clean: true, // ไม่เก็บ session เก่า
+            rejectUnauthorized: true,
             ...options,
         });
         this.client.on("connect", () => {
