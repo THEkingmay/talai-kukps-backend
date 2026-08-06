@@ -12,6 +12,8 @@ import { insertMany } from "./modules/car-history-logs/car-history-logs.service.
 import http from "http";
 import type { NewCarHistoryLog } from "./db/types.ts";
 import rateLimit from "express-rate-limit";
+import emailService from "./services/email.service.ts";
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, //15mins
     limit: 1000, // 1000 req/15mins ~~ 1req/s
@@ -22,6 +24,9 @@ const limiter = rateLimit({
     standardHeaders: true, // คืนค่า RateLimit-* ใน Response Header
     legacyHeaders: false, // ปิด Header แบบเก่า (X-RateLimit-*)
 });
+
+
+
 async function bootstrap() {
     const app: Express = express();
 
@@ -39,6 +44,7 @@ async function bootstrap() {
     app.use(errorMiddleware);
     app.use(limiter);
 
+    emailService.connect()
     await redisService.connect(process.env.REDIS_URL!);
     mqttService.connect(process.env.MQTT_URL!, {
         username: process.env.MQTT_SERVER_USERNAME,
@@ -65,6 +71,11 @@ async function bootstrap() {
             );
         }
     });
+
+    // app.get("/see-redis", async (req, res) => {
+    //     const data = await redisService.getAllDataInRedis();
+    //     res.json(data);
+    // });
 
     const server = http.createServer(app);
     websocketService.init(server);

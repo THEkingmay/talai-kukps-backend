@@ -2,6 +2,7 @@ import db from "../../db/index.ts";
 import { routePoints } from "../../db/schema.ts";
 import { eq, asc } from "drizzle-orm";
 import type { RoutePoint, NewRoutePoint } from "../../db/types.ts";
+import { NotFoundError } from "../../middlewares/error.middleware.ts";
 
 export async function getByRouteId(routeId: string): Promise<RoutePoint[]> {
     return db
@@ -25,7 +26,7 @@ export async function update(
         .set(body)
         .where(eq(routePoints.id, id))
         .returning();
-    if (!point) throw new Error("Route point not found");
+    if (!point) throw new NotFoundError("ไม่พบข้อมูลจุดบนเส้นทางในระบบ");
     return point;
 }
 

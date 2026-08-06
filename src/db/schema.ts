@@ -9,7 +9,8 @@ import {
     doublePrecision,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
+export const userRoleEnum = pgEnum("user_role", ["superadmin", "admin", "user"]);
+export const userStatusEnum = pgEnum("user_status", ["active", "suspended", "deleted"]);
 
 export const inviteStatusEnum = pgEnum("invite_status", [
     "pending",
@@ -27,6 +28,7 @@ export const users = pgTable("users", {
     id: uuid("id").defaultRandom().primaryKey(),
     email: varchar("email").notNull().unique(),
     hashPassword: text("hash_password").notNull(),
+    status: userStatusEnum("status").default("active").notNull(),
     role: userRoleEnum("role").default("user").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
         .defaultNow()
@@ -38,7 +40,6 @@ export const adminInvites = pgTable("admin_invites", {
     addedBy: uuid("added_by")
         .notNull()
         .references(() => users.id),
-    inviteCode: varchar("invite_code").notNull(),
     status: inviteStatusEnum("status").default("pending").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
         .defaultNow()

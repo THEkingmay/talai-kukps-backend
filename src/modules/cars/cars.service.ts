@@ -2,6 +2,7 @@ import db from "../../db/index.ts";
 import { cars } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 import type { Car, NewCar } from "../../db/types.ts";
+import { NotFoundError } from "../../middlewares/error.middleware.ts";
 
 export async function getAll(): Promise<Car[]> {
     return db.select().from(cars);
@@ -33,7 +34,7 @@ export async function update(
         .set({ ...body, updatedBy, updatedAt: new Date() })
         .where(eq(cars.id, id))
         .returning();
-    if (!car) throw new Error("Car not found");
+    if (!car) throw new NotFoundError("ไม่พบข้อมูลรถในระบบ");
     return car;
 }
 

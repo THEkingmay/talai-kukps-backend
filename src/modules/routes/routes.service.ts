@@ -2,6 +2,7 @@ import db from "../../db/index.ts";
 import { routes } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 import type { Route, NewRoute } from "../../db/types.ts";
+import { NotFoundError } from "../../middlewares/error.middleware.ts";
 
 export async function getAll(): Promise<Route[]> {
     return db.select().from(routes);
@@ -34,7 +35,7 @@ export async function update(
         .set({ ...body, updatedBy, updatedAt: new Date() })
         .where(eq(routes.id, id))
         .returning();
-    if (!route) throw new Error("Route not found");
+    if (!route) throw new NotFoundError("ไม่พบข้อมูลเส้นทางในระบบ");
     return route;
 }
 

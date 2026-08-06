@@ -99,6 +99,39 @@ class RedisService {
         const client = this.ensureConnected();
         return await client.keys(pattern);
     }
+
+    async getAllDataInRedis(): Promise<Record<string, any>> {
+        const client = this.ensureConnected();
+        const keys = await this.keys("*");
+        const result: Record<string, any> = {};
+
+        for (const key of keys) {
+            const type = await client.type(key);
+            const ttl = await client.ttl(key);
+
+            let value: any = null;
+            if (type === "hash") {
+                value = await client.hGetAll(key);
+            } else if (type === "string") {
+                const raw = await client.get(key);
+                try {
+                    value = raw ? JSON.parse(raw) : raw;
+                } catch {
+                    value = raw;
+                }
+            } else {
+                value = `<unhandled type: ${type}>`;
+            }
+
+            result[key] = {
+                type,
+                ttl: ttl === -1 ? "no expiration" : `${ttl}s`,
+                value,
+            };
+        }
+
+        return result;
+    }
 }
 
 export default new RedisService();

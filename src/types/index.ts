@@ -2,9 +2,8 @@
 
 export interface SessionUserType {
     id: string;
-    email: string;
-    role: "admin" | "user";
-    loginAt: string; // timestampz
+  email: string;
+  role: string;
 }
 
 export interface MqttMessageType {

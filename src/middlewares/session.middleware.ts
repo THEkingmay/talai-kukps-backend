@@ -11,7 +11,7 @@ export async function sessionMiddleware(
     if (!sessionId) {
         return res
             .status(401)
-            .json({ success: false, message: "Unauthorized" });
+            .json({ success: false, message: "กรุณาเข้าสู่ระบบก่อนใช้งาน" });
     }
 
     const user = await redisService.hGetAll<SessionUserType>(
@@ -20,7 +20,7 @@ export async function sessionMiddleware(
     if (!user) {
         return res
             .status(401)
-            .json({ success: false, message: "Unauthorized" });
+            .json({ success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" });
     }
 
     req.user = user;

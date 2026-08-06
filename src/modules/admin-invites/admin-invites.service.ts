@@ -3,6 +3,9 @@ import { adminInvites } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 import type { AdminInvite } from "../../db/types.ts";
 import crypto from "crypto";
+import { BadRequestError, NotFoundError } from "../../middlewares/error.middleware.ts";
+import emailService from "../../services/email.service.ts";
+import redisService from "../../services/redis.service.ts";
 
 export async function getAll(): Promise<AdminInvite[]> {
     return db.select().from(adminInvites);
@@ -15,22 +18,24 @@ export async function invite(
     const inviteCode = crypto.randomBytes(16).toString("hex");
     const [invite] = await db
         .insert(adminInvites)
-        .values({ email, addedBy, inviteCode, status: "pending" })
+        .values({ email, addedBy, status: "pending" })
         .returning();
-    return invite;
+
+    // save ลง redis อายุ 30 นาที
+    await redisService.hSet(`invite:${email}`, {inviteCode} , 60*30)
+
+    await emailService.sendAdminInviteEmail(email, inviteCode)
+  return invite;
 }
 
 export async function revoke(email: string): Promise<void> {
+    const existingInvite = await db.select().from(adminInvites).where(eq(adminInvites.email, email));
+    if (!existingInvite || existingInvite.length === 0) {
+        throw new NotFoundError("ไม่พบรายการคำเชิญนี้ในระบบ");
+    }
+    // ถ้าสถานไม่ใช้ pending ลบไม่ได้
+    if (existingInvite[0].status !== "pending") {
+        throw new BadRequestError("ไม่สามารถยกเลิกคำเชิญที่ไม่ได้อยู่ในสถานะรอยืนยันได้");
+    }
     await db.delete(adminInvites).where(eq(adminInvites.email, email));
-}
-
-export async function verify(
-    email: string,
-    inviteCode: string,
-): Promise<boolean> {
-    const invite = await db
-        .select()
-        .from(adminInvites)
-        .where(eq(adminInvites.email, email));
-    return invite.length > 0 && invite[0].inviteCode === inviteCode;
 }
