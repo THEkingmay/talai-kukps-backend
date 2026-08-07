@@ -21,8 +21,7 @@ export async function invite(
         .values({ email, addedBy, status: "pending" })
         .returning();
 
-    // save ลง redis อายุ 30 นาที
-    await redisService.hSet(`invite:${email}`, {inviteCode} , 60*30)
+    await redisService.hSet(`invite:${email}`, {inviteCode})
 
     await emailService.sendAdminInviteEmail(email, inviteCode)
   return invite;
@@ -37,5 +36,6 @@ export async function revoke(email: string): Promise<void> {
     if (existingInvite[0].status !== "pending") {
         throw new BadRequestError("ไม่สามารถยกเลิกคำเชิญที่ไม่ได้อยู่ในสถานะรอยืนยันได้");
     }
+    await redisService.delete(`invite:${email}`);
     await db.delete(adminInvites).where(eq(adminInvites.email, email));
 }

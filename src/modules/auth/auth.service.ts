@@ -40,7 +40,7 @@ export async function login(
 
     if (!user) throw new NotFoundError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
 
-    if (user.status === "deleted" || user.status === "suspended") throw new UnauthorizedError("บัญชีของคุณถูกระงับหรือถุกลบแล้ว");
+    if (user.status === "deleted" || user.status === "suspended") throw new UnauthorizedError("บัญชีของคุณถูกระงับหรือถูกลบแล้ว");
 
     const isValid = await bcrypt.compare(password, user.hashPassword);
     if (!isValid) throw new BadRequestError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
