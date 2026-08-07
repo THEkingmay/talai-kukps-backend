@@ -167,6 +167,32 @@ class EmailService {
 
         await this.sendEmail(to, subject, `คุณได้รับการเชิญเป็น Admin รหัสเชิญของคุณคือ: ${inviteCode}`, html);
     }
+
+    async sendResetPasswordEmail(to: string, resetLink: string): Promise<void> {
+        const subject = "คำขอกำหนดรหัสผ่านใหม่ (Reset Password) - KUKPS Talai";
+        const content = `
+            <p>สวัสดีครับ/ค่ะ,</p>
+            <p>คุณได้ทำการร้องขอกำหนดรหัสผ่านใหม่สำหรับบัญชี <b>KUKPS Talai System</b></p>
+            <p>กรุณาคลิกปุ่มด้านล่างเพื่อทำการตั้งรหัสผ่านใหม่</p>
+            <p style="color: #ef4444; font-size: 13px; margin-top: 16px;">* ลิงก์นี้จะหมดอายุภายใน 15 นาที</p>
+            <p style="color: #64748b; font-size: 13px;">หากคุณไม่ได้เป็นผู้ส่งคำขอนี้ สามารถละทิ้งอีเมลนี้ได้โดยปลอดภัย รหัสผ่านของคุณจะไม่ถูกเปลี่ยนแปลง</p>
+        `;
+
+        const html = this.createBaseTemplate({
+            title: "ตั้งรหัสผ่านใหม่ (Reset Password)",
+            preheader: "คำขอกำหนดรหัสผ่านใหม่สำหรับบัญชี KUKPS Talai System",
+            content,
+            actionButton: {
+                text: "ตั้งรหัสผ่านใหม่",
+                url: resetLink,
+            },
+        });
+
+        const text = `คุณได้ทำการร้องขอกำหนดรหัสผ่านใหม่ กรุณากดที่ลิงก์นี้เพื่อตั้งรหัสผ่านใหม่: ${resetLink} (ลิงก์มีอายุ 15 นาที)`;
+
+        await this.sendEmail(to, subject, text, html);
+    }
 }
 
 export default new EmailService();
+

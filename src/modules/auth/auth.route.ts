@@ -13,4 +13,7 @@ router.get(
     authController.loginWithSession,
 );
 
+router.post('/request-reset-password', authController.requestResetPassword); // body {email: string}
+router.post('/reset-password', authController.resetPassword); // body {token: string, password: string}
+
 export default router;

@@ -57,3 +57,22 @@ export async function loginWithSession(
         next(error);
     }
 }
+
+export async function requestResetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      await authService.requestResetPassword(req)
+      res.json({ success: true, message: "ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว" });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { token, newPassword } = req.body;
+        await authService.resetPassword(token, newPassword);
+        res.json({ success: true, message: "รีเซ็ตรหัสผ่านสำเร็จ" });
+    } catch (error) {
+        next(error);
+    }
+}

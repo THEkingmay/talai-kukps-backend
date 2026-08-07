@@ -12,6 +12,7 @@ import {
     NotFoundError,
     UnauthorizedError,
 } from "../../middlewares/error.middleware.ts";
+import emailService from "../../services/email.service.ts";
 
 // ไม่เก็บสถานะเพราะมันเปลี่ยนได้ตลอด
 interface UserResponse {
@@ -198,4 +199,43 @@ export async function loginWithSession(
 export async function logout(sessionId: string, res: Response): Promise<void> {
     await redisService.delete(`session:${sessionId}`);
     res.clearCookie("sessionId");
+}
+
+
+export async function requestResetPassword(req: Request) {
+    const { email } = req.body;
+    // 1. ค้นหาผู้ใช้งานจากอีเมล
+    const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+    if (!user) throw new NotFoundError("ไม่พบผู้ใช้งานที่มีอีเมลนี้");
+
+    // 2. สร้างลิงก์รีเซ็ตรหัสผ่าน
+    const token = crypto.randomBytes(32).toString("hex");
+
+    // 3. บันทึกลิงก์รีเซ็ตรหัสผ่านในฐานข้อมูล 15 นาที ใน redis
+    await redisService.hSet(`resetpassword:${token}`, { email }, 15 * 60);
+
+    // 4. ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของผู้ใช้
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const resetLink = `${frontendUrl}/auth/reset-password?token=${token}`;
+
+    await emailService.sendResetPasswordEmail(email, resetLink);
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+    const userData = await redisService.hGetAll<{email : string}>(`resetpassword:${token}`);
+    if (!userData) throw new NotFoundError("โทเคนไม่ถูกต้องหรือหมดอายุ");
+
+    const { email } = userData;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await db
+        .update(users)
+        .set({ hashPassword: hashedPassword })
+        .where(eq(users.email, email));
+
+    await redisService.delete(`resetpassword:${token}`);
 }
