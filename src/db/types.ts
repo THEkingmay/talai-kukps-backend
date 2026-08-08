@@ -61,10 +61,15 @@ export type RoutePoint = z.infer<typeof selectRoutePointSchema>;
 export type NewRoutePoint = z.infer<typeof insertRoutePointSchema>;
 
 export const selectCarSchema = createSelectSchema(cars);
-export const insertCarSchema = createInsertSchema(cars);
+export const dbInsertCarSchema = createInsertSchema(cars);
+export const insertCarSchema = dbInsertCarSchema.extend({
+    carMqttUsername: z.string().optional(),
+    encryptedMqttPassword: z.string().optional(),
+});
 
 export type Car = z.infer<typeof selectCarSchema>;
 export type NewCar = z.infer<typeof insertCarSchema>;
+export type ResponseCarData = Omit<Car, "encryptedMqttPassword" | "carMqttUsername">;
 
 export const selectCarHistoryLogSchema = createSelectSchema(carHistoryLog, {
     lat: latSchema,
