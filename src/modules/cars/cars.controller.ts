@@ -3,27 +3,40 @@ import * as carsService from "./cars.service.ts";
 import { insertCarSchema } from "../../db/types.ts";
 import { z } from "zod";
 
-
 const uuidSchema = z.object({ id: z.string().uuid() });
 
 export async function getAll(req: Request, res: Response, next: NextFunction) {
-    try {
-        const result = await carsService.getAll();
-        res.json({ success: true, data: result });
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const result = await carsService.getAll();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getLivePositions(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const result = await carsService.getLivePositions();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getById(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { id } = uuidSchema.parse(req.params);
-        const result = await carsService.getById(id);
-        if (!result) return res.status(404).json({ success: false, message: "ไม่พบข้อมูลรถ" });
-        res.json({ success: true, data: result });
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const { id } = uuidSchema.parse(req.params);
+    const result = await carsService.getById(id);
+    if (!result)
+      return res.status(404).json({ success: false, message: "ไม่พบข้อมูลรถ" });
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function create(req: Request, res: Response, next: NextFunction) {
@@ -44,10 +57,9 @@ export async function update(req: Request, res: Response, next: NextFunction) {
   try {
     const updateBodySchema = z.object({
       id: z.string(),
-      createdAt: z.date(),
       routeId: z.string(),
       carNumber: z.string(),
-      status: z.enum(["inactive", "maintenance"]),
+      status: z.enum(["inactive", "active"]),
     });
     const { id } = uuidSchema.parse(req.params);
     const body = updateBodySchema.parse(req.body);
@@ -59,11 +71,25 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { id } = uuidSchema.parse(req.params);
-        await carsService.remove(id);
-        res.json({ success: true, message: "ลบข้อมูลรถสำเร็จ" });
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const { id } = uuidSchema.parse(req.params);
+    await carsService.remove(id);
+    res.json({ success: true, message: "ลบข้อมูลรถสำเร็จ" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getMqttCredentials(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { id } = uuidSchema.parse(req.params);
+    const result = await carsService.getMqttCredentials(id);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
 }

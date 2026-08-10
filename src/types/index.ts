@@ -1,27 +1,27 @@
 // Shared TypeScript types (moved from db/custom-types.ts)
 
 export interface SessionUserType {
-    id: string;
+  id: string;
   email: string;
   role: string;
 }
 
 export interface MqttMessageType {
-    status: "active";
-    lat: number;
-    lng: number;
-    createdAt: string; // timestampz
+  status: "active" | "inactive";
+  lat: number;
+  lng: number;
+  createdAt: string; // timestampz
 }
 
 export interface WebSocketLocationBroadcastType extends MqttMessageType {
-    carId: string;
+  carId: string;
 }
 
 // Extend Express Request to carry authenticated user
 declare global {
-    namespace Express {
-        interface Request {
-            user?: SessionUserType;
-        }
+  namespace Express {
+    interface Request {
+      user?: SessionUserType;
     }
+  }
 }
