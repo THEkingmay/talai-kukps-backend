@@ -25,4 +25,10 @@ router.get(
   sessionMiddleware,
   carsController.getMqttCredentials,
 );
+
+router.post(
+  "/mqtt-credentials/:id/reset",
+  sessionMiddleware,
+  carsController.resetMqttCredentials,
+);
 export default router;

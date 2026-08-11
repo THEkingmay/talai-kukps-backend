@@ -94,3 +94,8 @@ export async function getMqttCredentials(
     encryptedMqttPassword: car[0].encryptedMqttPassword,
   };
 }
+
+export async function resetMqttCredentials(id: string): Promise<void> {
+  const newCredentials = generateMqttCredential();
+  await db.update(cars).set(newCredentials).where(eq(cars.id, id));
+}

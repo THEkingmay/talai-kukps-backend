@@ -5,31 +5,31 @@ import type { RoutePoint, NewRoutePoint } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
 
 export async function getByRouteId(routeId: string): Promise<RoutePoint[]> {
-    return db
-        .select()
-        .from(routePoints)
-        .where(eq(routePoints.routeId, routeId))
-        .orderBy(asc(routePoints.sequence));
+  return db
+    .select()
+    .from(routePoints)
+    .where(eq(routePoints.routeId, routeId))
+    .orderBy(asc(routePoints.sequence));
 }
 
-export async function create(body: NewRoutePoint): Promise<RoutePoint> {
-    const [point] = await db.insert(routePoints).values(body).returning();
-    return point;
+export async function create(body: NewRoutePoint[]): Promise<void> {
+  if (body.length === 0) return;
+  await db.insert(routePoints).values(body);
 }
 
 export async function update(
-    id: string,
-    body: Partial<NewRoutePoint>,
+  id: string,
+  body: Partial<NewRoutePoint>,
 ): Promise<RoutePoint> {
-    const [point] = await db
-        .update(routePoints)
-        .set(body)
-        .where(eq(routePoints.id, id))
-        .returning();
-    if (!point) throw new NotFoundError("ไม่พบข้อมูลจุดบนเส้นทางในระบบ");
-    return point;
+  const [point] = await db
+    .update(routePoints)
+    .set(body)
+    .where(eq(routePoints.id, id))
+    .returning();
+  if (!point) throw new NotFoundError("ไม่พบข้อมูลจุดบนเส้นทางในระบบ");
+  return point;
 }
 
 export async function remove(id: string): Promise<void> {
-    await db.delete(routePoints).where(eq(routePoints.id, id));
+  await db.delete(routePoints).where(eq(routePoints.id, id));
 }

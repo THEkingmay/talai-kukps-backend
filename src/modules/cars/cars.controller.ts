@@ -93,3 +93,17 @@ export async function getMqttCredentials(
     next(error);
   }
 }
+
+export async function resetMqttCredentials(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { id } = uuidSchema.parse(req.params);
+    await carsService.resetMqttCredentials(id);
+    res.json({ success: true, message: "รีเซ็ตรหัสผ่าน MQTT สำเร็จ" });
+  } catch (error) {
+    next(error);
+  }
+}
