@@ -32,14 +32,14 @@ class WebSocketService {
         req.socket.remoteAddress ||
         "unknown";
 
-      console.log(
-        `✅ [WebSocket] Client connected (${ws.ip}) — Total: ${this.wss!.clients.size}`,
-      );
+      // console.log(
+      //   `✅ [WebSocket] Client connected (${ws.ip}) — Total: ${this.wss!.clients.size}`,
+      // );
 
       ws.on("close", () => {
-        console.log(
-          `❌ [WebSocket] Client disconnected (${ws.ip}) — Total: ${this.wss!.clients.size}`,
-        );
+        // console.log(
+        //   `❌ [WebSocket] Client disconnected (${ws.ip}) — Total: ${this.wss!.clients.size}`,
+        // );
       });
 
       ws.on("error", (err) => {
@@ -62,7 +62,7 @@ class WebSocketService {
     const payload = JSON.stringify(data);
     this.wss.clients.forEach((client) => {
       // ส่งเฉพาะ Client ที่สถานะยังเปิดอยู่ (READYSTATE = 1)
-      console.log("Boardcast data", data);
+      //console.log("Boardcast data", data);
       if (client.readyState === WebSocket.OPEN) {
         client.send(payload);
       }
@@ -75,9 +75,9 @@ class WebSocketService {
       for (const client of this.wss.clients) {
         const wsClient = client as CustomWebSocket;
         if (wsClient.isAlive === false) {
-          console.log(
-            `[WebSocket] Terminating dead connection (${wsClient.ip ?? "Unknown"})`,
-          );
+          // console.log(
+          //   `[WebSocket] Terminating dead connection (${wsClient.ip ?? "Unknown"})`,
+          // );
           wsClient.terminate(); // ตัดสาย wsClient ที่ไม่ตอบกลับ Pong
           continue;
         }

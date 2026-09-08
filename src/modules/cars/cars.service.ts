@@ -1,6 +1,6 @@
 import db from "../../db/index.ts";
-import { cars } from "../../db/schema.ts";
-import { eq } from "drizzle-orm";
+import { cars, carHistoryLog } from "../../db/schema.ts";
+import { eq, desc } from "drizzle-orm";
 import type { NewCar, ResponseCarData } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
 import { generateMqttCredential } from "./utils/mqtt-credential.ts";
@@ -66,6 +66,8 @@ export async function updateStatusFromServer(
 }
 
 /** ดึงตำแหน่งล่าสุดของรถทุกคันจาก Redis สำหรับ initial state ตอน frontend โหลดครั้งแรก */
+// บางครั้่งใน redis จะไม่มีข้อมูลรถ เช่น เซิฟล่ม หรือเกิดข้อผิดพลาดในการอัปเดตข้อมูล
+// ให้ไปดึงตำแหน่งล่าสุดจาก supabaseแทน และให้ status เป็น "inactive" ถ้าไม่มีข้อมูลใน redis
 export async function getLivePositions(): Promise<
   WebSocketLocationBroadcastType[]
 > {
@@ -78,6 +80,33 @@ export async function getLivePositions(): Promise<
 
     const carId = key.replace("car:", "");
     results.push({ carId, ...carData });
+  }
+
+  const allCarId = await db.select({ id: cars.id }).from(cars);
+  const filterCarNotInRedis = allCarId.filter(
+    (car) => !keys.includes(`car:${car.id}`),
+  );
+  const filterCarNotInRedisIds = filterCarNotInRedis.map((car) => car.id);
+
+  if (filterCarNotInRedisIds.length === 0) return results;
+
+  // เมื่อได้ไอดีของรถที่ไม่มีใน redis แล้วให้ไปดึงประัติกาเดินทางล่าสุดมา
+  for (const carId of filterCarNotInRedisIds) {
+    const carHistory = await db
+      .select()
+      .from(carHistoryLog)
+      .where(eq(carHistoryLog.carId, carId))
+      .orderBy(desc(carHistoryLog.createdAt))
+      .limit(1);
+    if (carHistory.length === 0) continue;
+    const { lat, lng, createdAt } = carHistory[0];
+    results.push({
+      carId,
+      lat,
+      lng,
+      status: "inactive",
+      createdAt: createdAt.toISOString(),
+    });
   }
 
   return results;

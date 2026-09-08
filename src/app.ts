@@ -55,7 +55,7 @@ async function bootstrap() {
   mqttService.onMessage(async (topic, payload) => {
     // cars/carId = {status:string , lat:number, lng:number , createdAt:string}
     try {
-      console.log(`[MQTT] Message received on topic ${topic}: ${payload}`);
+
       const carId = topic.replace("cars/", "");
 
       /* รถส่งมาแค่ {lat:number, lng:number , status : 'active'} */
@@ -138,7 +138,6 @@ async function bootstrap() {
         // ตรวจสอบว่าเวลาซ้ำกับครั้งที่แล้วไหม
         const lastSeen = lastSeenMap.get(carId);
         if (lastSeen === carData.createdAt) {
-          console.log(`[WORKER] : car ${carId} has no new data, skipping`);
           continue; // ข้ามไปเลย ไม่บันทึกซ้ำ
         }
 
@@ -153,10 +152,7 @@ async function bootstrap() {
         lastSeenMap.set(carId, carData.createdAt);
       }
 
-      console.log(
-        `[WORKER] : saving car history log ${data.length} items`,
-        data,
-      );
+      console.log(`[WORKER] : saving car history log ${data.length} items`);
       if (data.length === 0) return;
       await insertMany(data);
     } catch (error) {
