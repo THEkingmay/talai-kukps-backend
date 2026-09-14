@@ -23,7 +23,7 @@ export const userStatusEnum = pgEnum("user_status", [
 export const inviteStatusEnum = pgEnum("invite_status", [
   "pending",
   "accepted",
-  "rejected",
+  // "rejected",
 ]);
 
 export const carStatusEnum = pgEnum("car_status", ["active", "inactive"]);
