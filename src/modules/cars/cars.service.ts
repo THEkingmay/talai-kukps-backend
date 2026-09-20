@@ -7,6 +7,7 @@ import { generateMqttCredential } from "./utils/mqtt-credential.ts";
 import redisService from "../../services/redis.service.ts";
 import type { MqttMessageType } from "../../types/index.ts";
 import type { WebSocketLocationBroadcastType } from "../../types/index.ts";
+import { decryptPassword } from "./utils/mqtt-credential.ts";
 
 export async function getAll(): Promise<ResponseCarData[]> {
   const carList = await db.select().from(cars);
@@ -114,13 +115,25 @@ export async function getLivePositions(): Promise<
 
 export async function getMqttCredentials(
   id: string,
-): Promise<{ carMqttUsername: string; encryptedMqttPassword: string }> {
+): Promise<{ carMqttUsername: string; decryptedMqttPassword: string }> {
   const car = await db.select().from(cars).where(eq(cars.id, id)).limit(1);
   if (!car || !car[0].carMqttUsername || !car[0].encryptedMqttPassword)
     throw new NotFoundError("ไม่พบข้อมูลรถในระบบ");
+
+  const { carMqttUsername, encryptedMqttPassword } = car[0];
+  const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+  if (!ENCRYPTION_KEY) {
+    throw new Error("ENCRYPTION_KEY is not defined in environment variables");
+  }
+
+  const decryptedMqttPassword = decryptPassword(
+    encryptedMqttPassword,
+    ENCRYPTION_KEY,
+  );
+
   return {
-    carMqttUsername: car[0].carMqttUsername,
-    encryptedMqttPassword: car[0].encryptedMqttPassword,
+    carMqttUsername,
+    decryptedMqttPassword,
   };
 }
 
