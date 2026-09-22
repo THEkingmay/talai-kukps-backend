@@ -18,8 +18,8 @@ import emailService from "../../services/email.service.ts";
 interface UserResponse {
   id: string;
   email: string;
-  role: "superadmin" | "admin" | "user";
-  status: "active" | "suspended" | "deleted";
+  role: "superadmin" | "admin" | "user" | "driver";
+  deletedAt: string | null;
   createdAt: string;
 }
 
@@ -40,7 +40,8 @@ export async function login(
 
   if (!user) throw new NotFoundError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
 
-  if (user.status === "deleted" || user.status === "suspended")
+  // if (user.status === "deleted" || user.status === "suspended")
+  if (user.deletedAt)
     throw new UnauthorizedError("บัญชีของคุณถูกระงับหรือถูกลบแล้ว");
 
   const isValid = await bcrypt.compare(password, user.hashPassword);
@@ -71,7 +72,7 @@ export async function login(
     id: user.id,
     email: user.email,
     role: user.role,
-    status: user.status,
+    deletedAt: user.deletedAt,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -83,29 +84,25 @@ export async function register(
   const { inviteCode, email, password } = body;
 
   // 1. ตรวจสอบสิทธิ์ Admin หากมี inviteCode
-  if (inviteCode) {
-    const [existingEmail] = await db
-      .select()
-      .from(adminInvites)
-      .where(eq(adminInvites.email, email))
-      .limit(1);
+  const [existingEmail] = await db
+    .select()
+    .from(adminInvites)
+    .where(eq(adminInvites.email, email))
+    .limit(1);
 
-    if (!existingEmail) {
-      throw new BadRequestError("คุณไม่ได้รับอนุญาตจากผู้ดูแลระบบ");
-    }
-    if (existingEmail.status !== "pending") {
-      throw new BadRequestError("รหัสเชิญนี้ถูกใช้งานหรือยกเลิกไปแล้ว");
-    }
+  if (!existingEmail) {
+    throw new BadRequestError("คุณไม่ได้รับอนุญาตจากผู้ดูแลระบบ");
+  }
+  if (existingEmail.status !== "pending") {
+    throw new BadRequestError("รหัสเชิญนี้ถูกใช้งานหรือยกเลิกไปแล้ว");
+  }
 
-    const redisInvite = await redisService.hGetAll<{ inviteCode: string }>(
-      `invite:${email}`,
-    );
+  const redisInvite = await redisService.hGetAll<{ inviteCode: string }>(
+    `invite:${email}`,
+  );
 
-    if (!redisInvite || redisInvite.inviteCode !== inviteCode) {
-      throw new BadRequestError("รหัสเชิญไม่ถูกต้องหรือหมดอายุ");
-    }
-
-    body.role = "admin";
+  if (!redisInvite || redisInvite.inviteCode !== inviteCode) {
+    throw new BadRequestError("รหัสเชิญไม่ถูกต้องหรือหมดอายุ");
   }
 
   // 2. ตรวจสอบอีเมลซ้ำ
@@ -129,6 +126,7 @@ export async function register(
       .values({
         ...userData,
         hashPassword: hashedPassword,
+        role: existingEmail.role,
       })
       .returning();
 
@@ -171,7 +169,7 @@ export async function register(
   return {
     id: newUser.id,
     email: newUser.email,
-    status: newUser.status,
+    deletedAt: newUser.deletedAt?.toISOString() || null,
     role: newUser.role,
     createdAt: newUser.createdAt.toISOString(),
   };
@@ -197,14 +195,14 @@ export async function loginWithSession(
 
   if (!dbUser) throw new UnauthorizedError("ไม่พบข้อมูลผู้ใช้งานในระบบ");
 
-  if (dbUser.status !== "active")
+  if (dbUser.deletedAt)
     throw new UnauthorizedError("ผู้ใช้งานถูกระงับ หรือ ถูกลบ");
 
   return {
     id: dbUser.id,
     email: dbUser.email,
     role: dbUser.role,
-    status: dbUser.status,
+    deletedAt: null,
     createdAt: dbUser.createdAt.toISOString(),
   };
 }

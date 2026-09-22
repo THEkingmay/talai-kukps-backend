@@ -14,4 +14,6 @@ router.post("/", sessionMiddleware, routesController.create);
 router.patch("/:id", sessionMiddleware, routesController.update);
 router.delete("/:id", sessionMiddleware, routesController.remove);
 
+router.patch("/restore/:id", sessionMiddleware, routesController.restore);
+
 export default router;

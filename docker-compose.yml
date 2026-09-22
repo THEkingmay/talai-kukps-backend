@@ -1,25 +1,38 @@
 version: "3.8"
 services:
-    # server:
-    #     build: .
-    #     container_name: kukps-talai-server
-    #     restart: unless-stopped
-    #     ports:
-    #         - "3000:3000"
-    #     env_file:
-    #         - .env
-    #     environment:
-    #         - REDIS_URL=redis://redis:6379
-    #     depends_on:
-    #         - redis
-    redis:
-        image: redis:7-alpine
-        container_name: fleet_redis
-        restart: unless-stopped
-        command: redis-server --appendonly yes
-        ports:
-            - "127.0.0.1:6379:6379"
-        volumes:
-            - redis_data:/data
+  # server:
+  #     build: .
+  #     container_name: kukps-talai-server
+  #     restart: unless-stopped
+  #     ports:
+  #         - "3000:3000"
+  #     env_file:
+  #         - .env
+  #     environment:
+  #         - REDIS_URL=redis://redis:6379
+  #     depends_on:
+  #         - redis
+  redis:
+    image: redis:7-alpine
+    container_name: fleet_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+  postgres:
+    image: postgres:16-alpine
+    container_name: fleet_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: talai_db
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 volumes:
-    redis_data:
+  redis_data:
+  postgres_data:

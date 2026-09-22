@@ -55,8 +55,18 @@ export async function update(
   return resData;
 }
 
-export async function remove(id: string): Promise<void> {
-  await db.delete(cars).where(eq(cars.id, id));
+export async function remove(id: string, updatedBy: string): Promise<void> {
+  await db
+    .update(cars)
+    .set({ deletedAt: new Date(), updatedBy, updatedAt: new Date() })
+    .where(eq(cars.id, id));
+}
+
+export async function restore(id: string, updatedBy: string): Promise<void> {
+  await db
+    .update(cars)
+    .set({ deletedAt: null, updatedBy, updatedAt: new Date() })
+    .where(eq(cars.id, id));
 }
 
 export async function updateStatusFromServer(

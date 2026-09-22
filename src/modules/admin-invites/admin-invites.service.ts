@@ -3,39 +3,48 @@ import { adminInvites } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 import type { AdminInvite } from "../../db/types.ts";
 import crypto from "crypto";
-import { BadRequestError, NotFoundError } from "../../middlewares/error.middleware.ts";
+import {
+  BadRequestError,
+  NotFoundError,
+} from "../../middlewares/error.middleware.ts";
 import emailService from "../../services/email.service.ts";
 import redisService from "../../services/redis.service.ts";
 
 export async function getAll(): Promise<AdminInvite[]> {
-    return db.select().from(adminInvites);
+  return db.select().from(adminInvites);
 }
 
 export async function invite(
-    email: string,
-    addedBy: string,
+  email: string,
+  addedBy: string,
+  role: "admin" | "driver",
 ): Promise<AdminInvite> {
-    const inviteCode = crypto.randomBytes(16).toString("hex");
-    const [invite] = await db
-        .insert(adminInvites)
-        .values({ email, addedBy, status: "pending" })
-        .returning();
+  const inviteCode = crypto.randomBytes(16).toString("hex");
+  const [invite] = await db
+    .insert(adminInvites)
+    .values({ email, addedBy, status: "pending", role })
+    .returning();
 
-    await redisService.hSet(`invite:${email}`, {inviteCode})
+  await redisService.hSet(`invite:${email}`, { inviteCode });
 
-    await emailService.sendAdminInviteEmail(email, inviteCode)
+  await emailService.sendAdminInviteEmail(email, inviteCode);
   return invite;
 }
 
 export async function revoke(email: string): Promise<void> {
-    const existingInvite = await db.select().from(adminInvites).where(eq(adminInvites.email, email));
-    if (!existingInvite || existingInvite.length === 0) {
-        throw new NotFoundError("ไม่พบรายการคำเชิญนี้ในระบบ");
-    }
-    // ถ้าสถานไม่ใช้ pending ลบไม่ได้
-    if (existingInvite[0].status !== "pending") {
-        throw new BadRequestError("ไม่สามารถยกเลิกคำเชิญที่ไม่ได้อยู่ในสถานะรอยืนยันได้");
-    }
-    await redisService.delete(`invite:${email}`);
-    await db.delete(adminInvites).where(eq(adminInvites.email, email));
+  const existingInvite = await db
+    .select()
+    .from(adminInvites)
+    .where(eq(adminInvites.email, email));
+  if (!existingInvite || existingInvite.length === 0) {
+    throw new NotFoundError("ไม่พบรายการคำเชิญนี้ในระบบ");
+  }
+  // ถ้าสถานไม่ใช้ pending ลบไม่ได้
+  if (existingInvite[0].status !== "pending") {
+    throw new BadRequestError(
+      "ไม่สามารถยกเลิกคำเชิญที่ไม่ได้อยู่ในสถานะรอยืนยันได้",
+    );
+  }
+  await redisService.delete(`invite:${email}`);
+  await db.delete(adminInvites).where(eq(adminInvites.email, email));
 }

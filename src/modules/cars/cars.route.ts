@@ -15,10 +15,11 @@ router.get(
 );
 router.get("/:id", mobileTokenMiddleware, carsController.getById);
 
-// protected  route admin only
 router.post("/", sessionMiddleware, carsController.create);
 router.patch("/:id", sessionMiddleware, carsController.update);
 router.delete("/:id", sessionMiddleware, carsController.remove);
+
+router.patch("/restore/:id", sessionMiddleware, carsController.restore);
 
 router.get(
   "/mqtt-credentials/:id",
@@ -29,6 +30,7 @@ router.get(
 router.post(
   "/mqtt-credentials/:id/reset",
   sessionMiddleware,
+
   carsController.resetMqttCredentials,
 );
 export default router;

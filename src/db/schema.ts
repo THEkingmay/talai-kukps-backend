@@ -8,17 +8,19 @@ import {
   pgEnum,
   doublePrecision,
 } from "drizzle-orm/pg-core";
+import { de } from "zod/v4/locales";
 
 export const userRoleEnum = pgEnum("user_role", [
   "superadmin",
   "admin",
   "user",
+  "driver",
 ]);
-export const userStatusEnum = pgEnum("user_status", [
-  "active",
-  "suspended",
-  "deleted",
-]);
+// export const userStatusEnum = pgEnum("user_status", [
+//   "active",
+//   "suspended",
+//   "deleted",
+// ]);
 
 export const inviteStatusEnum = pgEnum("invite_status", [
   "pending",
@@ -28,15 +30,18 @@ export const inviteStatusEnum = pgEnum("invite_status", [
 
 export const carStatusEnum = pgEnum("car_status", ["active", "inactive"]);
 
+export const inviteRoleEnum = pgEnum("invite_role", ["admin", "driver"]);
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: varchar("email").notNull().unique(),
   hashPassword: text("hash_password").notNull(),
-  status: userStatusEnum("status").default("active").notNull(),
+  // status: userStatusEnum("status").default("active").notNull(),
   role: userRoleEnum("role").default("user").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const adminInvites = pgTable("admin_invites", {
@@ -48,6 +53,7 @@ export const adminInvites = pgTable("admin_invites", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  role: inviteRoleEnum("role").default("admin").notNull(),
 });
 
 export const routes = pgTable("routes", {
@@ -60,6 +66,7 @@ export const routes = pgTable("routes", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const routePoints = pgTable("route_points", {
@@ -93,6 +100,7 @@ export const cars = pgTable("cars", {
   encryptedMqttPassword: text("encrypted_mqtt_password").notNull(),
   carNumber: varchar("car_number").notNull().unique(),
   status: carStatusEnum("status").default("inactive").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const carHistoryLog = pgTable("car_history_log", {
@@ -105,4 +113,23 @@ export const carHistoryLog = pgTable("car_history_log", {
     .references(() => cars.id, { onDelete: "cascade" }),
   lat: doublePrecision("lat").notNull(),
   lng: doublePrecision("lng").notNull(),
+});
+
+export const carDriverShifts = pgTable("car_driver_shifts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  carId: uuid("car_id")
+    .notNull()
+    .references(() => cars.id, { onDelete: "cascade" }),
+  driverId: uuid("driver_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  startTime: timestamp("start_time", { withTimezone: true }).notNull(),
+  endTime: timestamp("end_time", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
