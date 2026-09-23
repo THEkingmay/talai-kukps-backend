@@ -76,10 +76,14 @@ export const create = async (
 ) => {
   try {
     checkPermission(req, false);
+    // console.log("Request Body", req.body);
     const validatedData = insertCarDriverShiftSchema.parse({
       ...req.body,
       updatedBy: req.user?.id,
+      startTime: new Date(req.body.startTime),
+      endTime: new Date(req.body.endTime),
     });
+    console.log("Validated Data", validatedData);
     const insertedData = await assignmentDriverService.create(validatedData);
     res.json({ success: true, data: insertedData });
   } catch (error) {
@@ -95,8 +99,11 @@ export const update = async (
   try {
     checkPermission(req, false);
     const { id } = uuidSchema.parse(req.params);
+    // console.log("Request Body", req.body);
     const validatedData = updateCarDriverShiftSchema.parse({
       ...req.body,
+      startTime: new Date(req.body.startTime),
+      endTime: new Date(req.body.endTime),
       updatedBy: req.user?.id,
       updatedAt: new Date(),
     });
