@@ -10,6 +10,7 @@ import {
   routePoints,
   cars,
   carHistoryLog,
+  carDriverShifts,
 } from "./schema.ts";
 
 export const userRoleSchema = createSelectSchema(userRoleEnum);
@@ -85,3 +86,9 @@ export const insertCarHistoryLogSchema = createInsertSchema(carHistoryLog, {
 
 export type CarHistoryLog = z.infer<typeof selectCarHistoryLogSchema>;
 export type NewCarHistoryLog = z.infer<typeof insertCarHistoryLogSchema>;
+
+export const selectCarDriverShiftSchema = createSelectSchema(carDriverShifts);
+export type CarDriverShift = z.infer<typeof selectCarDriverShiftSchema>;
+export type NewCarDriverShift = z.infer<typeof insertCarDriverShiftSchema>;
+
+export const insertCarDriverShiftSchema = createInsertSchema(carDriverShifts);

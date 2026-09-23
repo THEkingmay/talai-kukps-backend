@@ -11,7 +11,7 @@ const emailSchema = z.object({
 });
 const inviteBodySchema = z.object({
   email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  role: z.enum(["admin", "driver"]),
+  role: z.enum(["superadmin", "admin", "driver"]),
 });
 
 export async function getAll(req: Request, res: Response, next: NextFunction) {

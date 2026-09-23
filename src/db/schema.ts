@@ -30,7 +30,11 @@ export const inviteStatusEnum = pgEnum("invite_status", [
 
 export const carStatusEnum = pgEnum("car_status", ["active", "inactive"]);
 
-export const inviteRoleEnum = pgEnum("invite_role", ["admin", "driver"]);
+export const inviteRoleEnum = pgEnum("invite_role", [
+  "superadmin",
+  "admin",
+  "driver",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),

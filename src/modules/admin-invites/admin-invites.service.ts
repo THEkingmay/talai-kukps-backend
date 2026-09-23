@@ -17,7 +17,7 @@ export async function getAll(): Promise<AdminInvite[]> {
 export async function invite(
   email: string,
   addedBy: string,
-  role: "admin" | "driver",
+  role: "superadmin" | "admin" | "driver",
 ): Promise<AdminInvite> {
   const inviteCode = crypto.randomBytes(16).toString("hex");
   const [invite] = await db
