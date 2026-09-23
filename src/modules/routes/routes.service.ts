@@ -1,19 +1,34 @@
 import db from "../../db/index.ts";
-import { routes } from "../../db/schema.ts";
-import { eq } from "drizzle-orm";
+import { routes, cars } from "../../db/schema.ts";
+import { eq, isNull } from "drizzle-orm";
 import type { Route, NewRoute } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
+import type { Request } from "express";
 
-export async function getAll(): Promise<Route[]> {
-  return db.select().from(routes);
+export async function getAll(req: Request): Promise<Route[]> {
+  if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
+    return db.select().from(routes);
+  }
+  // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
+  return db.select().from(routes).where(isNull(routes.deletedAt));
 }
 
-export async function getById(id: string): Promise<Route | null> {
+export async function getById(id: string, req: Request): Promise<Route | null> {
+  if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
+    const [route] = await db
+      .select()
+      .from(routes)
+      .where(eq(routes.id, id))
+      .limit(1);
+    if (!route) return null;
+    return route as Route;
+  }
   const [route] = await db
     .select()
     .from(routes)
     .where(eq(routes.id, id))
     .limit(1);
+  if (route.deletedAt) return null;
   return route ?? null;
 }
 
@@ -47,6 +62,9 @@ export async function remove(id: string, updatedBy: string): Promise<void> {
     .update(routes)
     .set({ deletedAt: new Date(), updatedAt: new Date(), updatedBy })
     .where(eq(routes.id, id));
+
+  // setRoute ID == null ของรถทุกคันที่เชื่อมอย่
+  await db.update(cars).set({ routeId: null }).where(eq(cars.routeId, id));
 }
 
 export async function restore(id: string, updatedBy: string): Promise<void> {

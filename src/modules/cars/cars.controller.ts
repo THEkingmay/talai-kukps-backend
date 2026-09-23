@@ -7,7 +7,7 @@ const uuidSchema = z.object({ id: z.string().uuid() });
 
 export async function getAll(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await carsService.getAll();
+    const result = await carsService.getAll(req);
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -30,7 +30,7 @@ export async function getLivePositions(
 export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = uuidSchema.parse(req.params);
-    const result = await carsService.getById(id);
+    const result = await carsService.getById(id, req);
     if (!result)
       return res.status(404).json({ success: false, message: "ไม่พบข้อมูลรถ" });
     res.json({ success: true, data: result });

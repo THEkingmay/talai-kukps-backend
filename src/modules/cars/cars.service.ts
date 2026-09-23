@@ -1,6 +1,6 @@
 import db from "../../db/index.ts";
 import { cars, carHistoryLog } from "../../db/schema.ts";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull } from "drizzle-orm";
 import type { NewCar, ResponseCarData } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
 import { generateMqttCredential } from "./utils/mqtt-credential.ts";
@@ -8,15 +8,36 @@ import redisService from "../../services/redis.service.ts";
 import type { MqttMessageType } from "../../types/index.ts";
 import type { WebSocketLocationBroadcastType } from "../../types/index.ts";
 import { decryptPassword } from "./utils/mqtt-credential.ts";
+import type { Request } from "express";
 
-export async function getAll(): Promise<ResponseCarData[]> {
-  const carList = await db.select().from(cars);
+export async function getAll(req: Request): Promise<ResponseCarData[]> {
+  // ตรวจสอบ req.user ถ้าเป็น แอดมินให้ส่งที่ลบกลับไปด้วย
+  // แต่ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
+
+  if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
+    const carList = await db.select().from(cars);
+    return carList.map(({ encryptedMqttPassword, ...car }) => car);
+  }
+  // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
+  const carList = await db.select().from(cars).where(isNull(cars.deletedAt));
   return carList.map(({ encryptedMqttPassword, ...car }) => car);
 }
 
-export async function getById(id: string): Promise<ResponseCarData | null> {
+export async function getById(
+  id: string,
+  req: Request,
+): Promise<ResponseCarData | null> {
+  // ตรวจสอบ req.user ถ้าเป็น แอดมินให้ส่งที่ลบกลับไปด้วย
+  // แต่ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
+  if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
+    const [car] = await db.select().from(cars).where(eq(cars.id, id)).limit(1);
+    if (!car) return null;
+    const { encryptedMqttPassword, ...resData } = car;
+    return resData;
+  }
+  // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
   const [car] = await db.select().from(cars).where(eq(cars.id, id)).limit(1);
-  if (!car) return null;
+  if (!car || car.deletedAt !== null) return null;
   const { encryptedMqttPassword, ...resData } = car;
   return resData;
 }
@@ -83,7 +104,7 @@ export async function getLivePositions(): Promise<
   WebSocketLocationBroadcastType[]
 > {
   const keys = await redisService.keys("car:*");
-  const results: WebSocketLocationBroadcastType[] = [];
+  let results: WebSocketLocationBroadcastType[] = [];
 
   for (const key of keys) {
     const carData = await redisService.hGetAll<MqttMessageType>(key);
@@ -93,16 +114,25 @@ export async function getLivePositions(): Promise<
     results.push({ carId, ...carData });
   }
 
-  const allCarId = await db.select({ id: cars.id }).from(cars);
-  const filterCarNotInRedis = allCarId.filter(
-    (car) => !keys.includes(`car:${car.id}`),
-  );
-  const filterCarNotInRedisIds = filterCarNotInRedis.map((car) => car.id);
+  const allCarId = await db
+    .select({ id: cars.id, is_deleted: cars.deletedAt })
+    .from(cars);
 
-  if (filterCarNotInRedisIds.length === 0) return results;
+  // ลบรถที่ลบแล้วออกจาก results
+  results = results.filter((car) =>
+    allCarId.some((c) => c.id === car.carId && c.is_deleted === null),
+  );
+
+  const filterCarNotInRedisAndNotDeleted = allCarId.filter(
+    (car) => !keys.includes(`car:${car.id}`) && car.is_deleted === null,
+  );
+  const filterCarNotInRedisAndNotDeletedIds =
+    filterCarNotInRedisAndNotDeleted.map((car) => car.id);
+
+  if (filterCarNotInRedisAndNotDeletedIds.length === 0) return results;
 
   // เมื่อได้ไอดีของรถที่ไม่มีใน redis แล้วให้ไปดึงประัติกาเดินทางล่าสุดมา
-  for (const carId of filterCarNotInRedisIds) {
+  for (const carId of filterCarNotInRedisAndNotDeletedIds) {
     const carHistory = await db
       .select()
       .from(carHistoryLog)

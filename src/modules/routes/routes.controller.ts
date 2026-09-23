@@ -7,7 +7,7 @@ const uuidSchema = z.object({ id: z.string().uuid() });
 
 export async function getAll(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await routesService.getAll();
+    const result = await routesService.getAll(req);
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -17,7 +17,7 @@ export async function getAll(req: Request, res: Response, next: NextFunction) {
 export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = uuidSchema.parse(req.params);
-    const result = await routesService.getById(id);
+    const result = await routesService.getById(id, req);
     if (!result)
       return res
         .status(404)
