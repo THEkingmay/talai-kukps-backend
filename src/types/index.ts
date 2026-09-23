@@ -3,7 +3,7 @@
 export interface SessionUserType {
   id: string;
   email: string;
-  role: string;
+  role: "admin" | "user" | "superadmin" | "driver";
 }
 
 export interface MqttMessageType {

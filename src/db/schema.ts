@@ -128,11 +128,13 @@ export const carDriverShifts = pgTable("car_driver_shifts", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   startTime: timestamp("start_time", { withTimezone: true }).notNull(),
-  endTime: timestamp("end_time", { withTimezone: true }),
+  endTime: timestamp("end_time", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedBy: uuid("updated_by").references(() => users.id),
+  updatedBy: uuid("updated_by")
+    .references(() => users.id)
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

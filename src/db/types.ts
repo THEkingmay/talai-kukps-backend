@@ -1,4 +1,8 @@
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod";
 import { z } from "zod";
 import {
   userRoleEnum,
@@ -90,5 +94,6 @@ export type NewCarHistoryLog = z.infer<typeof insertCarHistoryLogSchema>;
 export const selectCarDriverShiftSchema = createSelectSchema(carDriverShifts);
 export type CarDriverShift = z.infer<typeof selectCarDriverShiftSchema>;
 export type NewCarDriverShift = z.infer<typeof insertCarDriverShiftSchema>;
-
 export const insertCarDriverShiftSchema = createInsertSchema(carDriverShifts);
+export const updateCarDriverShiftSchema = createUpdateSchema(carDriverShifts);
+export type UpdatedCarDriverShift = z.infer<typeof updateCarDriverShiftSchema>;
