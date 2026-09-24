@@ -27,7 +27,7 @@ export async function invite(
 
   await redisService.hSet(`invite:${email}`, { inviteCode });
 
-  await emailService.sendAdminInviteEmail(email, inviteCode);
+  await emailService.sendAdminInviteEmail(email, inviteCode, role);
   return invite;
 }
 

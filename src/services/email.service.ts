@@ -1,79 +1,92 @@
 import nodemailer from "nodemailer";
 
-
 interface TemplateOptions {
-    title: string;
-    content: string; // HTML or Text content
-    preheader?: string;
-    actionButton?: {
-        text: string;
-        url: string;
-    };
-    codeBox?: string;
+  title: string;
+  content: string; // HTML or Text content
+  preheader?: string;
+  actionButton?: {
+    text: string;
+    url: string;
+  };
+  codeBox?: string;
 }
 
 class EmailService {
-    private transporter: nodemailer.Transporter | undefined;
+  private transporter: nodemailer.Transporter | undefined;
 
-    connect() {
-        const port = Number(process.env.SMTP_PORT) || 587;
+  connect() {
+    const port = Number(process.env.SMTP_PORT) || 587;
 
-        const secure = process.env.SMTP_SECURE !== undefined
-            ? process.env.SMTP_SECURE === "true" && port === 465
-            : port === 465;
+    const secure =
+      process.env.SMTP_SECURE !== undefined
+        ? process.env.SMTP_SECURE === "true" && port === 465
+        : port === 465;
 
-        this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port,
-            secure,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASSWORD,
-            },
-        });
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port,
+      secure,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  }
+
+  private ensureConnected() {
+    if (!this.transporter) {
+      this.connect();
     }
+  }
 
-    private ensureConnected() {
-        if (!this.transporter) {
-            this.connect();
-        }
-    }
+  async sendEmail(
+    to: string,
+    subject: string,
+    text: string,
+    html?: string,
+  ): Promise<void> {
+    this.ensureConnected();
 
-    async sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {
-        this.ensureConnected();
+    const mailOptions: nodemailer.SendMailOptions = {
+      from:
+        process.env.SMTP_FROM ||
+        `KUKPS Talai System <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      text,
+      html: html || this.createBaseTemplate({ title: subject, content: text }),
+    };
 
-        const mailOptions: nodemailer.SendMailOptions = {
-            from: process.env.SMTP_FROM || `KUKPS Talai System <${process.env.SMTP_USER}>`,
-            to,
-            subject,
-            text,
-            html: html || this.createBaseTemplate({ title: subject, content: text }),
-        };
+    await this.transporter!.sendMail(mailOptions);
+  }
 
-        await this.transporter!.sendMail(mailOptions);
-    }
+  createBaseTemplate({
+    title,
+    content,
+    preheader,
+    actionButton,
+    codeBox,
+  }: TemplateOptions): string {
+    const year = new Date().getFullYear();
 
-    createBaseTemplate({ title, content, preheader, actionButton, codeBox }: TemplateOptions): string {
-        const year = new Date().getFullYear();
-
-        const buttonHtml = actionButton
-            ? `
+    const buttonHtml = actionButton
+      ? `
             <div style="margin: 32px 0 0 0; text-align: left;">
                 <a href="${actionButton.url}" target="_blank" style="background-color: #000000; color: #ffffff; padding: 12px 24px; font-size: 14px; font-weight: 500; text-decoration: none; border-radius: 6px; display: inline-block;">
                     ${actionButton.text}
                 </a>
             </div>`
-            : "";
+      : "";
 
-        const codeBoxHtml = codeBox
-            ? `
+    const codeBoxHtml = codeBox
+      ? `
             <div style="background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 6px; padding: 12px 16px; margin: 32px 0 0 0; text-align: left;">
                 <span style="font-size: 12px; color: #666666; display: block; margin-bottom: 8px;">รหัสเชิญ / OTP:</span>
                 <span style="font-family: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro', 'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace; font-size: 20px; font-weight: 600; color: #000000; letter-spacing: 2px;">${codeBox}</span>
             </div>`
-            : "";
+      : "";
 
-        return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -89,7 +102,7 @@ class EmailService {
         <tr>
             <td align="center">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; background-color: #ffffff; text-align: left;">
-                    
+
                     <!-- Header -->
                     <tr>
                         <td style="padding-bottom: 32px;">
@@ -132,35 +145,44 @@ class EmailService {
     </table>
 </body>
 </html>`;
-    }
+  }
 
-    async sendAdminInviteEmail(to: string, inviteCode: string, registerUrl?: string): Promise<void> {
-        const subject = "คำเชิญเข้าใช้งานระบบผู้ดูแลระบบ (Admin) - KUKPS Talai";
-        const content = `
+  async sendAdminInviteEmail(
+    to: string,
+    inviteCode: string,
+    role: "superadmin" | "admin" | "driver",
+  ): Promise<void> {
+    const roleDisplay = {
+      superadmin: "ผู้ดูแลระบบสูงสุด (Super Admin)",
+      admin: "ผู้ดูแลระบบ (Admin)",
+      driver: "พนักงานขับรถ (Driver)",
+    }[role];
+
+    const subject = `คำเชิญเข้าใช้งานระบบในตำแหน่ง ${roleDisplay} - KUKPS Talai`;
+    const content = `
             <p>สวัสดีครับ/ค่ะ,</p>
-            <p>คุณได้รับคำเชิญเข้าร่วมเป็นผู้ดูแลระบบ (Admin) สำหรับ <b>KUKPS Talai System</b></p>
+            <p>คุณได้รับคำเชิญเข้าร่วมเป็น <b>${roleDisplay}</b> สำหรับ <b>KUKPS Talai System</b></p>
             <p>กรุณานำรหัสเชิญด้านล่างนี้ไปลงทะเบียนเพื่อเข้าใช้งานระบบ</p>
         `;
 
-        const html = this.createBaseTemplate({
-            title: "คำเชิญสิทธิ์ผู้ดูแลระบบ (Admin Invite)",
-            preheader: `คุณได้รับการเชิญเป็น Admin รหัสเชิญของคุณคือ ${inviteCode}`,
-            content,
-            codeBox: inviteCode,
-            actionButton: registerUrl
-                ? {
-                      text: "ลงทะเบียนบัญชี Admin",
-                      url: registerUrl,
-                  }
-                : undefined,
-        });
+    const html = this.createBaseTemplate({
+      title: `คำเชิญสิทธิ์ ${roleDisplay}`,
+      preheader: `คุณได้รับการเชิญเป็น ${roleDisplay} รหัสเชิญของคุณคือ ${inviteCode}`,
+      content,
+      codeBox: inviteCode,
+    });
 
-        await this.sendEmail(to, subject, `คุณได้รับการเชิญเป็น Admin รหัสเชิญของคุณคือ: ${inviteCode}`, html);
-    }
+    await this.sendEmail(
+      to,
+      subject,
+      `คุณได้รับการเชิญเป็น ${roleDisplay} รหัสเชิญของคุณคือ: ${inviteCode}`,
+      html,
+    );
+  }
 
-    async sendResetPasswordEmail(to: string, resetLink: string): Promise<void> {
-        const subject = "คำขอกำหนดรหัสผ่านใหม่ (Reset Password) - KUKPS Talai";
-        const content = `
+  async sendResetPasswordEmail(to: string, resetLink: string): Promise<void> {
+    const subject = "คำขอกำหนดรหัสผ่านใหม่ (Reset Password) - KUKPS Talai";
+    const content = `
             <p>สวัสดีครับ/ค่ะ,</p>
             <p>คุณได้ทำการร้องขอกำหนดรหัสผ่านใหม่สำหรับบัญชี <b>KUKPS Talai System</b></p>
             <p>กรุณาคลิกปุ่มด้านล่างเพื่อทำการตั้งรหัสผ่านใหม่</p>
@@ -168,21 +190,20 @@ class EmailService {
             <p style="color: #64748b; font-size: 13px;">หากคุณไม่ได้เป็นผู้ส่งคำขอนี้ สามารถละทิ้งอีเมลนี้ได้โดยปลอดภัย รหัสผ่านของคุณจะไม่ถูกเปลี่ยนแปลง</p>
         `;
 
-        const html = this.createBaseTemplate({
-            title: "ตั้งรหัสผ่านใหม่ (Reset Password)",
-            preheader: "คำขอกำหนดรหัสผ่านใหม่สำหรับบัญชี KUKPS Talai System",
-            content,
-            actionButton: {
-                text: "ตั้งรหัสผ่านใหม่",
-                url: resetLink,
-            },
-        });
+    const html = this.createBaseTemplate({
+      title: "ตั้งรหัสผ่านใหม่ (Reset Password)",
+      preheader: "คำขอกำหนดรหัสผ่านใหม่สำหรับบัญชี KUKPS Talai System",
+      content,
+      actionButton: {
+        text: "ตั้งรหัสผ่านใหม่",
+        url: resetLink,
+      },
+    });
 
-        const text = `คุณได้ทำการร้องขอกำหนดรหัสผ่านใหม่ กรุณากดที่ลิงก์นี้เพื่อตั้งรหัสผ่านใหม่: ${resetLink} (ลิงก์มีอายุ 15 นาที)`;
+    const text = `คุณได้ทำการร้องขอกำหนดรหัสผ่านใหม่ กรุณากดที่ลิงก์นี้เพื่อตั้งรหัสผ่านใหม่: ${resetLink} (ลิงก์มีอายุ 15 นาที)`;
 
-        await this.sendEmail(to, subject, text, html);
-    }
+    await this.sendEmail(to, subject, text, html);
+  }
 }
 
 export default new EmailService();
-

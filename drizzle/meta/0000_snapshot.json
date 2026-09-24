@@ -1,5 +1,5 @@
 {
-  "id": "da650a27-33f7-4092-b5e4-681fc3d1ba28",
+  "id": "818b0eb4-4c60-43ed-9893-f39033bd8718",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -34,6 +34,14 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "role": {
+          "name": "role",
+          "type": "invite_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'admin'"
         }
       },
       "indexes": {},
@@ -44,6 +52,110 @@
           "tableTo": "users",
           "columnsFrom": [
             "added_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.car_driver_shifts": {
+      "name": "car_driver_shifts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "car_id": {
+          "name": "car_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_id": {
+          "name": "driver_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "car_driver_shifts_car_id_cars_id_fk": {
+          "name": "car_driver_shifts_car_id_cars_id_fk",
+          "tableFrom": "car_driver_shifts",
+          "tableTo": "cars",
+          "columnsFrom": [
+            "car_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "car_driver_shifts_driver_id_users_id_fk": {
+          "name": "car_driver_shifts_driver_id_users_id_fk",
+          "tableFrom": "car_driver_shifts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "driver_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "car_driver_shifts_updated_by_users_id_fk": {
+          "name": "car_driver_shifts_updated_by_users_id_fk",
+          "tableFrom": "car_driver_shifts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "updated_by"
           ],
           "columnsTo": [
             "id"
@@ -179,6 +291,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'inactive'"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -337,6 +455,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -398,6 +522,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -423,8 +553,16 @@
       "schema": "public",
       "values": [
         "active",
-        "inactive",
-        "maintenance"
+        "inactive"
+      ]
+    },
+    "public.invite_role": {
+      "name": "invite_role",
+      "schema": "public",
+      "values": [
+        "superadmin",
+        "admin",
+        "driver"
       ]
     },
     "public.invite_status": {
@@ -432,16 +570,17 @@
       "schema": "public",
       "values": [
         "pending",
-        "accepted",
-        "rejected"
+        "accepted"
       ]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
       "values": [
+        "superadmin",
         "admin",
-        "user"
+        "user",
+        "driver"
       ]
     }
   },
