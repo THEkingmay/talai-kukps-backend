@@ -6,6 +6,15 @@ import { z } from "zod";
 const uuidSchema = z.object({ id: z.string().uuid() });
 const routeIdSchema = z.object({ routeId: z.string().uuid() });
 
+export async function getAll(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await routePointsService.getAll();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getByRouteId(
   req: Request,
   res: Response,

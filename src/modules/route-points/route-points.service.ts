@@ -4,6 +4,10 @@ import { eq, asc } from "drizzle-orm";
 import type { RoutePoint, NewRoutePoint } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
 
+export async function getAll(): Promise<RoutePoint[]> {
+  return db.select().from(routePoints).orderBy(asc(routePoints.sequence));
+}
+
 export async function getByRouteId(routeId: string): Promise<RoutePoint[]> {
   return db
     .select()

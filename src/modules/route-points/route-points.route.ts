@@ -5,6 +5,7 @@ import * as routePointsController from "./route-points.controller.ts";
 
 const router = Router();
 
+router.get("/", mobileTokenMiddleware, routePointsController.getAll);
 // GET /route-points/by-route/:routeId  — get all points for a route (ordered by sequence)
 router.get(
   "/by-route/:routeId",
