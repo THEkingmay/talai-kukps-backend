@@ -42,6 +42,9 @@ export const users = pgTable("users", {
   hashPassword: text("hash_password").notNull(),
   // status: userStatusEnum("status").default("active").notNull(),
   role: userRoleEnum("role").default("user").notNull(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

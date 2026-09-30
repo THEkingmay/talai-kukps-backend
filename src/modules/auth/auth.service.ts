@@ -1,5 +1,5 @@
 import type { Response, Request } from "express";
-import type { NewUser } from "../../db/types.ts";
+import type { NewUser, User } from "../../db/types.ts";
 import db from "../../db/index.ts";
 import { users, adminInvites } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
@@ -14,14 +14,7 @@ import {
 } from "../../middlewares/error.middleware.ts";
 import emailService from "../../services/email.service.ts";
 
-// ไม่เก็บสถานะเพราะมันเปลี่ยนได้ตลอด
-interface UserResponse {
-  id: string;
-  email: string;
-  role: "superadmin" | "admin" | "user" | "driver";
-  deletedAt: string | null;
-  createdAt: string;
-}
+type UserResponse = Omit<User, "hashPassword">;
 
 interface RegisterBody extends NewUser {
   inviteCode?: string;
@@ -73,7 +66,10 @@ export async function login(
     email: user.email,
     role: user.role,
     deletedAt: user.deletedAt,
-    createdAt: user.createdAt.toISOString(),
+    createdAt: user.createdAt,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    profileImageUrl: user.profileImageUrl,
   };
 }
 
@@ -169,9 +165,12 @@ export async function register(
   return {
     id: newUser.id,
     email: newUser.email,
-    deletedAt: newUser.deletedAt?.toISOString() || null,
+    deletedAt: newUser.deletedAt || null,
     role: newUser.role,
-    createdAt: newUser.createdAt.toISOString(),
+    createdAt: newUser.createdAt,
+    firstName: newUser.firstName,
+    lastName: newUser.lastName,
+    profileImageUrl: newUser.profileImageUrl,
   };
 }
 
@@ -203,7 +202,10 @@ export async function loginWithSession(
     email: dbUser.email,
     role: dbUser.role,
     deletedAt: null,
-    createdAt: dbUser.createdAt.toISOString(),
+    createdAt: dbUser.createdAt,
+    firstName: dbUser.firstName,
+    lastName: dbUser.lastName,
+    profileImageUrl: dbUser.profileImageUrl,
   };
 }
 
