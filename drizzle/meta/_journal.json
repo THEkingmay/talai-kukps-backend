@@ -8,6 +8,34 @@
       "when": 1790225239044,
       "tag": "0000_warm_rhino",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790678588271,
+      "tag": "0001_next_fabian_cortez",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790678661115,
+      "tag": "0002_productive_nick_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790678684155,
+      "tag": "0003_lean_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790744926420,
+      "tag": "0004_dizzy_anita_blake",
+      "breakpoints": true
     }
   ]
 }

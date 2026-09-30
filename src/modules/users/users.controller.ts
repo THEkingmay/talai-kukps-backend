@@ -68,3 +68,27 @@ export async function restoreDeletedUser(
     next(error);
   }
 }
+
+export async function updateProfile(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { id } = req.params;
+    const userId = idSchema.parse(id);
+    const { firstName, lastName } = req.body;
+    const profileImage = req.file;
+    const userProfile = await usersService.updateProfile(
+      userId,
+      firstName,
+      lastName,
+      profileImage,
+    );
+    if (!userProfile)
+      return res.status(404).json({ success: false, message: "ไม่พบผู้ใช้" });
+    res.json({ success: true, user: userProfile });
+  } catch (error) {
+    next(error);
+  }
+}

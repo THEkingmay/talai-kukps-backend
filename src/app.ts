@@ -13,6 +13,7 @@ import http from "http";
 import type { NewCarHistoryLog } from "./db/types.ts";
 import rateLimit from "express-rate-limit";
 import emailService from "./services/email.service.ts";
+import s3Service from "./services/s3.service.ts";
 import { updateStatusFromServer } from "./modules/cars/cars.service.ts";
 
 const VALID_STATUSES = ["active", "inactive"] as const;
@@ -47,6 +48,8 @@ async function bootstrap() {
   app.use(errorMiddleware);
 
   emailService.connect();
+  s3Service.connect();
+
   await redisService.connect(process.env.REDIS_URL!);
   mqttService.connect(process.env.MQTT_URL!, {
     username: process.env.MQTT_SERVER_USERNAME,
@@ -55,7 +58,6 @@ async function bootstrap() {
   mqttService.onMessage(async (topic, payload) => {
     // cars/carId = {status:string , lat:number, lng:number , createdAt:string}
     try {
-
       const carId = topic.replace("cars/", "");
 
       /* รถส่งมาแค่ {lat:number, lng:number , status : 'active'} */
