@@ -77,13 +77,14 @@ export async function updateProfile(
   try {
     const { id } = req.params;
     const userId = idSchema.parse(id);
-    const { firstName, lastName } = req.body;
+    const { firstName, lastName, phoneNumber } = req.body;
     const profileImage = req.file;
     const userProfile = await usersService.updateProfile(
       userId,
       firstName,
       lastName,
       profileImage,
+      phoneNumber,
     );
     if (!userProfile)
       return res.status(404).json({ success: false, message: "ไม่พบผู้ใช้" });

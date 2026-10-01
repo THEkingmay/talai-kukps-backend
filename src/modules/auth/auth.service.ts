@@ -70,6 +70,7 @@ export async function login(
     firstName: user.firstName,
     lastName: user.lastName,
     profileImageUrl: user.profileImageUrl,
+    phoneNumber: user.phoneNumber,
   };
 }
 
@@ -171,6 +172,7 @@ export async function register(
     firstName: newUser.firstName,
     lastName: newUser.lastName,
     profileImageUrl: newUser.profileImageUrl,
+    phoneNumber: newUser.phoneNumber,
   };
 }
 
@@ -206,6 +208,7 @@ export async function loginWithSession(
     firstName: dbUser.firstName,
     lastName: dbUser.lastName,
     profileImageUrl: dbUser.profileImageUrl,
+    phoneNumber: dbUser.phoneNumber,
   };
 }
 

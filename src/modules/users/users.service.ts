@@ -34,12 +34,14 @@ export async function updateProfile(
   firstName: string | undefined,
   lastName: string | undefined,
   profileImage: Express.Multer.File | undefined,
+  phoneNumber: string | undefined,
 ): Promise<User | undefined> {
   // สร้าง Object เพื่อรวบรวมข้อมูลที่จะอัปเดตทั้งหมดไว้ก้อนเดียว
   const updateData: Partial<typeof users.$inferInsert> = {};
 
   if (firstName !== undefined) updateData.firstName = firstName;
   if (lastName !== undefined) updateData.lastName = lastName;
+  if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
 
   // อัปโหลดรูปภาพให้เสร็จก่อน (ถ้ามี)
   if (profileImage) {
