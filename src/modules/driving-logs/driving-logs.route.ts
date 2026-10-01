@@ -8,6 +8,7 @@ router.use(sessionMiddleware);
 
 router.post("/start", drivingLogsController.start);
 router.post("/end", drivingLogsController.end);
+router.get("/current", drivingLogsController.getCurrent);
 router.get("/my", drivingLogsController.getMy);
 router.get("/", drivingLogsController.getAll);
 

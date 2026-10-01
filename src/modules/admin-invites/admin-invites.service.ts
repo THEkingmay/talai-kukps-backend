@@ -9,6 +9,7 @@ import {
 } from "../../middlewares/error.middleware.ts";
 import emailService from "../../services/email.service.ts";
 import redisService from "../../services/redis.service.ts";
+import { redisKeys } from "../../services/redis-keys.ts";
 
 export async function getAll(): Promise<AdminInvite[]> {
   return db.select().from(adminInvites);
@@ -25,7 +26,7 @@ export async function invite(
     .values({ email, addedBy, status: "pending", role })
     .returning();
 
-  await redisService.hSet(`invite:${email}`, { inviteCode });
+  await redisService.hSet(redisKeys.invite(email), { inviteCode });
 
   await emailService.sendAdminInviteEmail(email, inviteCode, role);
   return invite;
@@ -45,6 +46,6 @@ export async function revoke(email: string): Promise<void> {
       "ไม่สามารถยกเลิกคำเชิญที่ไม่ได้อยู่ในสถานะรอยืนยันได้",
     );
   }
-  await redisService.delete(`invite:${email}`);
+  await redisService.delete(redisKeys.invite(email));
   await db.delete(adminInvites).where(eq(adminInvites.email, email));
 }

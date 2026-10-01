@@ -16,6 +16,7 @@ import emailService from "./services/email.service.ts";
 import s3Service from "./services/s3.service.ts";
 import { updateStatusFromServer } from "./modules/cars/cars.service.ts";
 import type { DriverRedisState } from "./modules/driving-logs/driving-logs.service.ts";
+import { redisKeys } from "./services/redis-keys.ts";
 
 const VALID_STATUSES = ["active", "inactive"] as const;
 
@@ -26,7 +27,7 @@ const VALID_STATUSES = ["active", "inactive"] as const;
  */
 async function checkDriverConfirmation(carId: string): Promise<void> {
   // reverse lookup: หา driverId ของคนที่ควรขับรถคันนี้
-  const driverId = await redisService.get(`car:${carId}:activeDriver`) as string | null;
+  const driverId = await redisService.get(redisKeys.car.activeDriver(carId)) as string | null;
 
   if (!driverId) {
     // ไม่มีคนขับ assigned ใน Redis เลย (ไม่เคยกดเริ่มงาน)
@@ -34,7 +35,7 @@ async function checkDriverConfirmation(carId: string): Promise<void> {
     return;
   }
 
-  const driverState = await redisService.get(`driver:${driverId}`) as DriverRedisState | null;
+  const driverState = await redisService.get(redisKeys.driver.state(driverId)) as DriverRedisState | null;
 
   if (!driverState || driverState.status === "ended") {
     // คนขับมีอยู่ใน Redis แต่ status เป็น ended (กดหยุดแล้ว)
@@ -56,14 +57,14 @@ async function sendDriverAlert(
 
   // กรณีไม่มี driverId เลย: ใช้ Redis key แยกต่างหากเป็น flag
   if (!driverId) {
-    const alreadySent = await redisService.get(`car:${carId}:alertSent`);
+    const alreadySent = await redisService.get(redisKeys.car.alertSent(carId));
     if (alreadySent) return;
-    await redisService.set(`car:${carId}:alertSent`, true);
+    await redisService.set(redisKeys.car.alertSent(carId), true);
   }
 
   // mark ว่าส่งแล้วใน driver state
   if (driverId && driverState) {
-    await redisService.set(`driver:${driverId}`, {
+    await redisService.set(redisKeys.driver.state(driverId), {
       ...driverState,
       alertSentAt: new Date().toISOString(),
     });
@@ -133,7 +134,7 @@ async function bootstrap() {
       };
 
       const lastState = await redisService.hGetAll<MqttMessageType>(
-        `car:${carId}`,
+        redisKeys.car.position(carId),
       );
 
       // ตรวจสอบว่า status ที่รับมาถูกต้องก่อน
@@ -164,7 +165,7 @@ async function bootstrap() {
         carId,
         ...data,
       }); // boardcast ไปหา client ทั้งหมด
-      redisService.hSet(`car:${carId}`, data); // บันทึกไว้ให้ setTinterval วนมาบันทึก logs ทุก ๆ 60 วินาที
+      redisService.hSet(redisKeys.car.position(carId), data); // บันทึกไว้ให้ setTinterval วนมาบันทึก logs ทุก ๆ 60 วินาที
     } catch (error) {
       console.error(
         `[MQTT] Error processing message on topic ${topic}:`,
@@ -192,10 +193,10 @@ async function bootstrap() {
   setInterval(async () => {
     try {
       let data: NewCarHistoryLog[] = [];
-      const keys = await redisService.keys("car:*");
+      const keys = await redisService.keys(redisKeys.car.positionPattern);
 
       for (const key of keys) {
-        const carId = key.replace("car:", "");
+        const carId = redisKeys.car.idFromPositionKey(key);
         const carData = await redisService.hGetAll<MqttMessageType>(key);
 
         if (
@@ -235,9 +236,9 @@ async function bootstrap() {
   // คอยตรวจสอบว่ารถได้ส่งตำแหน่งมาไหม ถ้าไม่ส่งมา 5 นาทีจะเปลีย่นสถานะใน Redis เป็น inactive และส่งแจ้งเตือนผ่าน WebSocket
   setInterval(async () => {
     try {
-      const keys = await redisService.keys("car:*");
+      const keys = await redisService.keys(redisKeys.car.positionPattern);
       for (const key of keys) {
-        const carId = key.replace("car:", "");
+        const carId = redisKeys.car.idFromPositionKey(key);
         const carData = await redisService.hGetAll<MqttMessageType>(key);
         if (
           !carData ||

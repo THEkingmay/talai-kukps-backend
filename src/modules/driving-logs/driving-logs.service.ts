@@ -1,5 +1,6 @@
 import db from "../../db/index.ts";
 import redisService from "../../services/redis.service.ts";
+import { redisKeys } from "../../services/redis-keys.ts";
 import { drivingLogs, carDriverShifts } from "../../db/schema.ts";
 import { eq, and } from "drizzle-orm";
 import type { DrivingLog } from "../../db/types.ts";
@@ -16,14 +17,14 @@ async function setDriverRedisState(
   driverId: string,
   state: DriverRedisState,
 ): Promise<void> {
-  await redisService.set(`driver:${driverId}`, state);
+  await redisService.set(redisKeys.driver.state(driverId), state);
 }
 
 async function setActiveDriverForCar(
   carId: string,
   driverId: string,
 ): Promise<void> {
-  await redisService.set(`car:${carId}:activeDriver`, driverId);
+  await redisService.set(redisKeys.car.activeDriver(carId), driverId);
 }
 // คนขับกดเริ่มงาน — ตรวจ shift แล้ว insert log + sync Redis */
 export async function startDriving(
@@ -44,6 +45,16 @@ export async function startDriving(
 
   if (!shift) {
     throw new Error("ไม่พบ shift หรือคุณไม่มีสิทธิ์เริ่มงาน shift นี้");
+  }
+
+  // ตรวจสอบว่าไม่มี log ที่กำลังยู่ ไม่ให้เพิ่มซ้ำ
+  const [existingLog] = await db
+    .select()
+    .from(drivingLogs)
+    .where(eq(drivingLogs.status, "active"))
+    .limit(1);
+  if (existingLog) {
+    throw new Error("มี log ที่กำลังทำอยู่ กรุณาจบก่อนเริ่มงานใหม่");
   }
 
   // insert driving log
@@ -100,7 +111,7 @@ export async function endDriving(
 
   // update Redis (คง key ไว้เพื่อให้ MQTT ยัง lookup driverId ได้)
   const currentState = (await redisService.get(
-    `driver:${driverId}`,
+    redisKeys.driver.state(driverId),
   )) as DriverRedisState | null;
 
   if (currentState) {
@@ -111,6 +122,21 @@ export async function endDriving(
   }
 
   return updated;
+}
+
+/** GET /driving-logs/current — Driver ดูงานที่กำลังทำอยู่ */
+export async function getCurrentDriving(
+  driverId: string,
+): Promise<DrivingLog | null> {
+  const [res] = await db
+    .select({ log: drivingLogs })
+    .from(drivingLogs)
+    .innerJoin(carDriverShifts, eq(drivingLogs.shiftId, carDriverShifts.id))
+    .where(eq(carDriverShifts.driverId, driverId))
+    .orderBy(drivingLogs.startedAt)
+    .limit(1);
+
+  return res?.log ?? null;
 }
 
 //  Driver ดูประวัติการขับของตัวเอง */

@@ -5,6 +5,7 @@ import type { NewCar, ResponseCarData } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
 import { generateMqttCredential } from "./utils/mqtt-credential.ts";
 import redisService from "../../services/redis.service.ts";
+import { redisKeys } from "../../services/redis-keys.ts";
 import type { MqttMessageType } from "../../types/index.ts";
 import type { WebSocketLocationBroadcastType } from "../../types/index.ts";
 import { decryptPassword } from "./utils/mqtt-credential.ts";
@@ -103,14 +104,14 @@ export async function updateStatusFromServer(
 export async function getLivePositions(): Promise<
   WebSocketLocationBroadcastType[]
 > {
-  const keys = await redisService.keys("car:*");
+  const keys = await redisService.keys(redisKeys.car.positionPattern);
   let results: WebSocketLocationBroadcastType[] = [];
 
   for (const key of keys) {
     const carData = await redisService.hGetAll<MqttMessageType>(key);
     if (!carData || !carData.lat || !carData.lng) continue;
 
-    const carId = key.replace("car:", "");
+    const carId = redisKeys.car.idFromPositionKey(key);
     results.push({ type: "location", carId, ...carData });
   }
 

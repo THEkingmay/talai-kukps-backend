@@ -4,6 +4,7 @@ import db from "../../db/index.ts";
 import { users, adminInvites } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 import redisService from "../../services/redis.service.ts";
+import { redisKeys } from "../../services/redis-keys.ts";
 import type { SessionUserType } from "../../types/index.ts";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -49,7 +50,7 @@ export async function login(
   };
 
   await redisService.hSet(
-    `session:${sessionId}`,
+    redisKeys.session(sessionId),
     sessionData,
     7 * 24 * 60 * 60,
   );
@@ -95,7 +96,7 @@ export async function register(
   }
 
   const redisInvite = await redisService.hGetAll<{ inviteCode: string }>(
-    `invite:${email}`,
+    redisKeys.invite(email),
   );
 
   if (!redisInvite || redisInvite.inviteCode !== inviteCode) {
@@ -139,7 +140,7 @@ export async function register(
 
   // 5. ลบ invite code ออกจาก Redis เมื่อลงทะเบียนสำเร็จแล้ว
   if (inviteCode) {
-    await redisService.delete(`invite:${email}`);
+    await redisService.delete(redisKeys.invite(email));
   }
 
   // 6. Create session in Redis
@@ -151,7 +152,7 @@ export async function register(
   };
 
   await redisService.hSet(
-    `session:${sessionId}`,
+    redisKeys.session(sessionId),
     sessionData,
     7 * 24 * 60 * 60,
   );
@@ -184,7 +185,7 @@ export async function loginWithSession(
     throw new UnauthorizedError("ไม่พบเซสชัน กรุณาเข้าสู่ระบบอีกครั้ง");
 
   const user = await redisService.hGetAll<SessionUserType>(
-    `session:${sessionId}`,
+    redisKeys.session(sessionId),
   );
   if (!user) throw new UnauthorizedError("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
 
@@ -213,7 +214,7 @@ export async function loginWithSession(
 }
 
 export async function logout(sessionId: string, res: Response): Promise<void> {
-  await redisService.delete(`session:${sessionId}`);
+  await redisService.delete(redisKeys.session(sessionId));
   res.clearCookie("sessionId");
 }
 
@@ -231,7 +232,7 @@ export async function requestResetPassword(req: Request) {
   const token = crypto.randomBytes(32).toString("hex");
 
   // 3. บันทึกลิงก์รีเซ็ตรหัสผ่านในฐานข้อมูล 15 นาที ใน redis
-  await redisService.hSet(`resetpassword:${token}`, { email }, 15 * 60);
+  await redisService.hSet(redisKeys.resetPassword(token), { email }, 15 * 60);
 
   // 4. ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของผู้ใช้
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -242,7 +243,7 @@ export async function requestResetPassword(req: Request) {
 
 export async function resetPassword(token: string, newPassword: string) {
   const userData = await redisService.hGetAll<{ email: string }>(
-    `resetpassword:${token}`,
+    redisKeys.resetPassword(token),
   );
   if (!userData) throw new NotFoundError("โทเคนไม่ถูกต้องหรือหมดอายุ");
 
@@ -254,5 +255,5 @@ export async function resetPassword(token: string, newPassword: string) {
     .set({ hashPassword: hashedPassword })
     .where(eq(users.email, email));
 
-  await redisService.delete(`resetpassword:${token}`);
+  await redisService.delete(redisKeys.resetPassword(token));
 }
