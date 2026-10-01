@@ -8,7 +8,6 @@ import {
   pgEnum,
   doublePrecision,
 } from "drizzle-orm/pg-core";
-import { de } from "zod/v4/locales";
 
 export const userRoleEnum = pgEnum("user_role", [
   "superadmin",
@@ -16,16 +15,9 @@ export const userRoleEnum = pgEnum("user_role", [
   "user",
   "driver",
 ]);
-// export const userStatusEnum = pgEnum("user_status", [
-//   "active",
-//   "suspended",
-//   "deleted",
-// ]);
-
 export const inviteStatusEnum = pgEnum("invite_status", [
   "pending",
   "accepted",
-  // "rejected",
 ]);
 
 export const carStatusEnum = pgEnum("car_status", ["active", "inactive"]);
@@ -36,11 +28,12 @@ export const inviteRoleEnum = pgEnum("invite_role", [
   "driver",
 ]);
 
+export const drivingStatusEnum = pgEnum("driving_status", ["active", "ended"]);
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: varchar("email").notNull().unique(),
   hashPassword: text("hash_password").notNull(),
-  // status: userStatusEnum("status").default("active").notNull(),
   role: userRoleEnum("role").default("user").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -140,6 +133,22 @@ export const carDriverShifts = pgTable("car_driver_shifts", {
     .references(() => users.id)
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// บันทึกการกดเริ่ม/หยุดงานจริงๆ ของคนขับ (อาจเกิดหลายครั้งใน shift เดียว)
+export const drivingLogs = pgTable("driving_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  shiftId: uuid("shift_id")
+    .notNull()
+    .references(() => carDriverShifts.id, { onDelete: "cascade" }),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }), // null = ยังวิ่งอยู่
+  status: drivingStatusEnum("status").default("active").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });

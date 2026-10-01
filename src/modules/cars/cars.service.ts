@@ -111,7 +111,7 @@ export async function getLivePositions(): Promise<
     if (!carData || !carData.lat || !carData.lng) continue;
 
     const carId = key.replace("car:", "");
-    results.push({ carId, ...carData });
+    results.push({ type: "location", carId, ...carData });
   }
 
   const allCarId = await db
@@ -142,6 +142,7 @@ export async function getLivePositions(): Promise<
     if (carHistory.length === 0) continue;
     const { lat, lng, createdAt } = carHistory[0];
     results.push({
+      type: "location",
       carId,
       lat,
       lng,

@@ -43,6 +43,13 @@
       "when": 1790749317810,
       "tag": "0005_high_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790839300978,
+      "tag": "0006_fast_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }

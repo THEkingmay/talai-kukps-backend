@@ -15,8 +15,71 @@ import rateLimit from "express-rate-limit";
 import emailService from "./services/email.service.ts";
 import s3Service from "./services/s3.service.ts";
 import { updateStatusFromServer } from "./modules/cars/cars.service.ts";
+import type { DriverRedisState } from "./modules/driving-logs/driving-logs.service.ts";
 
 const VALID_STATUSES = ["active", "inactive"] as const;
+
+/**
+ * ตรวจสอบว่าคนขับที่ควรขับรถคันนี้ได้กดเริ่มงานหรือยัง
+ * ถ้าไม่ได้กด (หรือกดหยุดแล้ว) จะส่ง WebSocket alert ไปยัง client ทั้งหมด
+ * ส่งได้ครั้งเดียวต่อ session (กัน spam ด้วย alertSentAt flag ใน Redis)
+ */
+async function checkDriverConfirmation(carId: string): Promise<void> {
+  // reverse lookup: หา driverId ของคนที่ควรขับรถคันนี้
+  const driverId = await redisService.get(`car:${carId}:activeDriver`) as string | null;
+
+  if (!driverId) {
+    // ไม่มีคนขับ assigned ใน Redis เลย (ไม่เคยกดเริ่มงาน)
+    await sendDriverAlert(carId, null, null);
+    return;
+  }
+
+  const driverState = await redisService.get(`driver:${driverId}`) as DriverRedisState | null;
+
+  if (!driverState || driverState.status === "ended") {
+    // คนขับมีอยู่ใน Redis แต่ status เป็น ended (กดหยุดแล้ว)
+    await sendDriverAlert(carId, driverId, driverState);
+  }
+}
+
+/**
+ * ส่ง WebSocket alert ไปยัง client ทั้งหมด (ครั้งเดียวต่อ session)
+ * ถ้า alertSentAt มีค่าแล้ว แปลว่าส่งไปแล้ว — ไม่ส่งซ้ำ
+ */
+async function sendDriverAlert(
+  carId: string,
+  driverId: string | null,
+  driverState: DriverRedisState | null,
+): Promise<void> {
+  // กรณีมี driverId: ใช้ alertSentAt ใน driver state เป็น flag
+  if (driverState?.alertSentAt) return;
+
+  // กรณีไม่มี driverId เลย: ใช้ Redis key แยกต่างหากเป็น flag
+  if (!driverId) {
+    const alreadySent = await redisService.get(`car:${carId}:alertSent`);
+    if (alreadySent) return;
+    await redisService.set(`car:${carId}:alertSent`, true);
+  }
+
+  // mark ว่าส่งแล้วใน driver state
+  if (driverId && driverState) {
+    await redisService.set(`driver:${driverId}`, {
+      ...driverState,
+      alertSentAt: new Date().toISOString(),
+    });
+  }
+
+  console.warn(`[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"})`);
+
+  websocketService.broadcast({
+    type: "alert",
+    alertType: "driver_not_confirmed",
+    carId,
+    driverId,
+    message: "รถกำลังวิ่งแต่คนขับยังไม่ได้กดเริ่มงาน",
+    timestamp: new Date().toISOString(),
+  });
+}
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, //15mins
@@ -89,7 +152,15 @@ async function bootstrap() {
         );
       }
 
+      // ตรวจสอบว่าคนขับ confirm แล้วหรือยัง (เฉพาะตอนรถ active)
+      if (data.status === "active") {
+        checkDriverConfirmation(carId).catch((err) =>
+          console.error("[MQTT] Driver confirmation check failed:", err),
+        );
+      }
+
       websocketService.broadcast({
+        type: "location",
         carId,
         ...data,
       }); // boardcast ไปหา client ทั้งหมด
@@ -188,7 +259,7 @@ async function bootstrap() {
           } catch (error) {
             console.error(`[WORKER] : update status error`, error);
           }
-          websocketService.broadcast({ carId, ...carData, status: "inactive" });
+          websocketService.broadcast({ type: "location", carId, ...carData, status: "inactive" });
         }
       }
       console.log(`[WORKER] : check car position done`);

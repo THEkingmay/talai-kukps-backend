@@ -1,0 +1,14 @@
+import { Router } from "express";
+import { sessionMiddleware } from "../../middlewares/session.middleware.ts";
+import * as drivingLogsController from "./driving-logs.controller.ts";
+
+const router = Router();
+
+router.use(sessionMiddleware);
+
+router.post("/start", drivingLogsController.start);
+router.post("/end", drivingLogsController.end);
+router.get("/my", drivingLogsController.getMy);
+router.get("/", drivingLogsController.getAll);
+
+export default router;
