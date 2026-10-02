@@ -156,6 +156,7 @@ const PUBLISH_INTERVAL_MS = 3000; // publish ทุก 3 วินาที
  * โดยวิ่ง loop ต่อเนื่องไม่หยุด (กลับไปเริ่มต้นเมื่อถึงจุดสุดท้าย)
  */
 function startCarSimulator(config: {
+  clientId: string;
   carName: string;
   mqttUrl: string;
   username: string;
@@ -163,9 +164,11 @@ function startCarSimulator(config: {
   topic: string;
   route: RoutePoint[];
 }): void {
-  const { carName, mqttUrl, username, password, topic, route } = config;
+  const { clientId, carName, mqttUrl, username, password, topic, route } =
+    config;
 
   const client = mqtt.connect(mqttUrl, {
+    clientId,
     username,
     password,
     // HiveMQ Cloud ใช้ TLS port 8883 (mqtts://)
@@ -176,7 +179,7 @@ function startCarSimulator(config: {
   let intervalId: ReturnType<typeof setInterval> | null = null;
 
   client.on("connect", () => {
-    console.log(`[${carName}] Connected to MQTT broker`);
+    console.log(`[${clientId}] Connected to MQTT broker`);
 
     intervalId = setInterval(() => {
       const point = route[currentIndex];
@@ -189,12 +192,12 @@ function startCarSimulator(config: {
       client.publish(topic, JSON.stringify(payload), { qos: 0 }, (err) => {
         if (err) {
           console.error(
-            `[${carName}] Publish error at seq ${point.sequence}:`,
+            `[${clientId}] Publish error at seq ${point.sequence}:`,
             err.message,
           );
         } else {
           console.log(
-            `[${carName}] seq=${point.sequence} lat=${point.lat.toFixed(7)} lng=${point.lng.toFixed(7)}`,
+            `[${clientId}] seq=${point.sequence} lat=${point.lat.toFixed(7)} lng=${point.lng.toFixed(7)}`,
           );
         }
       });
@@ -205,11 +208,11 @@ function startCarSimulator(config: {
   });
 
   client.on("error", (err) => {
-    console.error(`[${carName}] MQTT error:`, err.message);
+    console.error(`[${clientId}] MQTT error:`, err.message);
   });
 
   client.on("close", () => {
-    console.warn(`[${carName}] Connection closed`);
+    console.warn(`[${clientId}] Connection closed`);
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;
@@ -217,13 +220,16 @@ function startCarSimulator(config: {
   });
 
   client.on("reconnect", () => {
-    console.log(`[${carName}] Reconnecting...`);
+    console.log(`[${clientId}] Reconnecting...`);
   });
 }
 
 // ---------------------- Main ----------------------
 
 const mqttUrl = process.env.MQTT_URL;
+const car1ClientId = process.env.CAR1_MQTT_CLIENT_ID;
+const car2ClientId = process.env.CAR2_MQTT_CLIENT_ID;
+
 const car1Username = process.env.CAR1_MQTT_USERNAME;
 const car1Password = process.env.CAR1_MQTT_PASSWORD;
 const car1Topic = process.env.CAR1_MQTT_TOPIC;
@@ -233,6 +239,8 @@ const car2Topic = process.env.CAR2_MQTT_TOPIC;
 
 if (
   !mqttUrl ||
+  !car1ClientId ||
+  !car2ClientId ||
   !car1Username ||
   !car1Password ||
   !car1Topic ||
@@ -248,6 +256,7 @@ if (
 
 // เริ่ม simulator ทั้งสองคันพร้อมกัน (parallel)
 startCarSimulator({
+  clientId: car1ClientId,
   carName: "CAR1 (หอใน)",
   mqttUrl,
   username: car1Username,
@@ -257,6 +266,7 @@ startCarSimulator({
 });
 
 startCarSimulator({
+  clientId: car2ClientId,
   carName: "CAR2 (หน้ามอ)",
   mqttUrl,
   username: car2Username,
