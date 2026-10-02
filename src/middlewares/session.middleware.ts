@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import redisService from "../services/redis.service.ts";
+import { redisKeys } from "../services/redis-keys.ts";
 import type { SessionUserType } from "../types/index.ts";
 
 export async function sessionMiddleware(
@@ -15,7 +16,7 @@ export async function sessionMiddleware(
     }
 
     const user = await redisService.hGetAll<SessionUserType>(
-        `session:${sessionId}`,
+        redisKeys.session(sessionId),
     );
     if (!user) {
         return res

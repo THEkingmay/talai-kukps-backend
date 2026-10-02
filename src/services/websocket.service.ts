@@ -1,7 +1,7 @@
 import { Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import type { Request } from "express";
-import type { WebSocketLocationBroadcastType } from "../types/index.ts";
+import type { WebSocketBroadcastType } from "../types/index.ts";
 
 const MAX_CONNECTIONS = 500; // จำนวน connection รวมสูงสุดของ Server
 
@@ -57,7 +57,7 @@ class WebSocketService {
 
   // ไว้ส่งตำแหน่งรถปัจจุบันไปยัง client ทุกคน
   // ถูกเรียกจาก mqtt subscriber ให้ broadcast ข้อมูลตำแหน่งรถปัจจุบันไปยัง client ทุกคน
-  broadcast(data: WebSocketLocationBroadcastType) {
+  broadcast(data: WebSocketBroadcastType) {
     if (!this.wss) return;
     const payload = JSON.stringify(data);
     this.wss.clients.forEach((client) => {

@@ -15,6 +15,8 @@ import {
   cars,
   carHistoryLog,
   carDriverShifts,
+  drivingLogs,
+  drivingStatusEnum,
 } from "./schema.ts";
 
 export const userRoleSchema = createSelectSchema(userRoleEnum);
@@ -97,3 +99,14 @@ export type NewCarDriverShift = z.infer<typeof insertCarDriverShiftSchema>;
 export const insertCarDriverShiftSchema = createInsertSchema(carDriverShifts);
 export const updateCarDriverShiftSchema = createUpdateSchema(carDriverShifts);
 export type UpdatedCarDriverShift = z.infer<typeof updateCarDriverShiftSchema>;
+
+export const drivingStatusSchema = createSelectSchema(drivingStatusEnum);
+export type DrivingStatus = z.infer<typeof drivingStatusSchema>;
+
+export const selectDrivingLogSchema = createSelectSchema(drivingLogs);
+export const insertDrivingLogSchema = createInsertSchema(drivingLogs);
+export const updateDrivingLogSchema = createUpdateSchema(drivingLogs);
+
+export type DrivingLog = z.infer<typeof selectDrivingLogSchema>;
+export type NewDrivingLog = z.infer<typeof insertDrivingLogSchema>;
+export type UpdatedDrivingLog = z.infer<typeof updateDrivingLogSchema>;

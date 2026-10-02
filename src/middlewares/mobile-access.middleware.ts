@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import redisService from "../services/redis.service.ts";
+import { redisKeys } from "../services/redis-keys.ts";
 import type { SessionUserType } from "../types/index.ts";
 
 export async function mobileTokenMiddleware(
@@ -50,7 +51,7 @@ export async function mobileTokenMiddleware(
     }
 
     const user = await redisService.hGetAll<SessionUserType>(
-        `session:${sessionId}`,
+        redisKeys.session(sessionId),
     );
     if (!user) {
         return res.status(401).json({
