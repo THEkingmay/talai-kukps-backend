@@ -58,3 +58,5 @@ Dockerignore
 # Misc
 coverage/
 .nyc_output/
+
+KNOWN_ISSUES.md

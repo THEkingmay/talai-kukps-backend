@@ -77,6 +77,14 @@ export async function updateProfile(
   try {
     const { id } = req.params;
     const userId = idSchema.parse(id);
+    if (req.user?.id !== id) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "ไม่มีสิทธิ์แก้ไข profile ของผู้ใช้อื่น",
+        });
+    }
     const { firstName, lastName, phoneNumber } = req.body;
     const profileImage = req.file;
     const userProfile = await usersService.updateProfile(

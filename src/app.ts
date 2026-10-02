@@ -27,7 +27,9 @@ const VALID_STATUSES = ["active", "inactive"] as const;
  */
 async function checkDriverConfirmation(carId: string): Promise<void> {
   // reverse lookup: หา driverId ของคนที่ควรขับรถคันนี้
-  const driverId = await redisService.get(redisKeys.car.activeDriver(carId)) as string | null;
+  const driverId = (await redisService.get(
+    redisKeys.car.activeDriver(carId),
+  )) as string | null;
 
   if (!driverId) {
     // ไม่มีคนขับ assigned ใน Redis เลย (ไม่เคยกดเริ่มงาน)
@@ -35,7 +37,9 @@ async function checkDriverConfirmation(carId: string): Promise<void> {
     return;
   }
 
-  const driverState = await redisService.get(redisKeys.driver.state(driverId)) as DriverRedisState | null;
+  const driverState = (await redisService.get(
+    redisKeys.driver.state(driverId),
+  )) as DriverRedisState | null;
 
   if (!driverState || driverState.status === "ended") {
     // คนขับมีอยู่ใน Redis แต่ status เป็น ended (กดหยุดแล้ว)
@@ -70,7 +74,9 @@ async function sendDriverAlert(
     });
   }
 
-  console.warn(`[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"})`);
+  console.warn(
+    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"})`,
+  );
 
   websocketService.broadcast({
     type: "alert",
@@ -173,18 +179,6 @@ async function bootstrap() {
       );
     }
   });
-
-  if (process.env.NODE_ENV === "development") {
-    app.get("/see-redis", async (req, res) => {
-      const data = await redisService.getAllDataInRedis();
-      res.json(data);
-    });
-    app.get("/clear-redis", async (req, res) => {
-      await redisService.deleteAll();
-      res.json({ message: "Redis cleared" });
-    });
-  }
-
   const server = http.createServer(app);
   websocketService.init(server);
 
@@ -260,7 +254,12 @@ async function bootstrap() {
           } catch (error) {
             console.error(`[WORKER] : update status error`, error);
           }
-          websocketService.broadcast({ type: "location", carId, ...carData, status: "inactive" });
+          websocketService.broadcast({
+            type: "location",
+            carId,
+            ...carData,
+            status: "inactive",
+          });
         }
       }
       console.log(`[WORKER] : check car position done`);

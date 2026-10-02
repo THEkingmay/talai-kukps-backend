@@ -30,6 +30,11 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
+    if (req.user?.role !== "admin" && req.user?.role !== "superadmin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "ไม่มีสิทธิ์ในการจัดการเส้นทาง" });
+    }
     const body = insertRouteSchema.parse(req.body);
     const result = await routesService.create(body, req.user!.id);
     res.status(201).json({ success: true, data: result });
@@ -40,6 +45,11 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
 export async function update(req: Request, res: Response, next: NextFunction) {
   try {
+    if (req.user?.role !== "admin" && req.user?.role !== "superadmin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "ไม่มีสิทธิ์ในการจัดการเส้นทาง" });
+    }
     const { id } = uuidSchema.parse(req.params);
     const body = insertRouteSchema.partial().parse(req.body);
     const result = await routesService.update(id, body, req.user!.id);
@@ -51,6 +61,11 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
   try {
+    if (req.user?.role !== "admin" && req.user?.role !== "superadmin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "ไม่มีสิทธิ์ในการจัดการเส้นทาง" });
+    }
     const { id } = uuidSchema.parse(req.params);
     await routesService.remove(id, req.user!.id);
     res.json({ success: true, message: "ลบสายการเดินรถสำเร็จ" });
@@ -61,6 +76,11 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 
 export async function restore(req: Request, res: Response, next: NextFunction) {
   try {
+    if (req.user?.role !== "admin" && req.user?.role !== "superadmin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "ไม่มีสิทธิ์ในการจัดการเส้นทาง" });
+    }
     const { id } = uuidSchema.parse(req.params);
     await routesService.restore(id, req.user!.id);
     res.json({ success: true, message: "ยกเลิกการลบสายรถ" });

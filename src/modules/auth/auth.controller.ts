@@ -10,7 +10,10 @@ const loginSchema = z.object({
 const registerSchema = insertUserSchema.extend({
   inviteCode: z.string(),
 });
-
+const resetSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8, "Password ต้องมีอย่างน้อย 8 ตัวอักษร"),
+});
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = loginSchema.parse(req.body);
@@ -80,7 +83,8 @@ export async function resetPassword(
   next: NextFunction,
 ) {
   try {
-    const { token, newPassword } = req.body;
+    const { token, newPassword } = resetSchema.parse(req.body);
+
     await authService.resetPassword(token, newPassword);
     res.json({ success: true, message: "รีเซ็ตรหัสผ่านสำเร็จ" });
   } catch (error) {

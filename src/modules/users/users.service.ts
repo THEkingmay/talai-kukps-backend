@@ -8,12 +8,40 @@ import {
 } from "../../middlewares/error.middleware.ts";
 import s3Service from "../../services/s3.service.ts";
 
-export async function getAll(): Promise<User[]> {
-  return db.select().from(users);
+export async function getAll(): Promise<Omit<User, "hashPassword">[]> {
+  return db
+    .select({
+      id: users.id,
+      email: users.email,
+      role: users.role,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImageUrl: users.profileImageUrl,
+      phoneNumber: users.phoneNumber,
+      createdAt: users.createdAt,
+      deletedAt: users.deletedAt,
+    })
+    .from(users);
 }
 
-export async function getById(id: string): Promise<User | null> {
-  const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+export async function getById(
+  id: string,
+): Promise<Omit<User, "hashPassword"> | null> {
+  const [user] = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      role: users.role,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImageUrl: users.profileImageUrl,
+      phoneNumber: users.phoneNumber,
+      createdAt: users.createdAt,
+      deletedAt: users.deletedAt,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
   return user ?? null;
 }
 
