@@ -2,9 +2,12 @@ import db from "../../db/index.ts";
 import redisService from "../../services/redis.service.ts";
 import { redisKeys } from "../../services/redis-keys.ts";
 import { drivingLogs, carDriverShifts } from "../../db/schema.ts";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import type { DrivingLog } from "../../db/types.ts";
-
+import {
+  NotFoundError,
+  ConflictError,
+} from "../../middlewares/error.middleware.ts";
 // Redis value shape สำหรับ driver state
 export interface DriverRedisState {
   status: "active" | "ended";
@@ -43,19 +46,19 @@ export async function startDriving(
     )
     .limit(1);
 
-  if (!shift) {
-    throw new Error("ไม่พบ shift หรือคุณไม่มีสิทธิ์เริ่มงาน shift นี้");
-  }
+  if (!shift)
+    throw new NotFoundError("ไม่พบ shift หรือคุณไม่มีสิทธิ์เริ่มงาน shift นี้");
 
   // ตรวจสอบว่าไม่มี log ที่กำลังยู่ ไม่ให้เพิ่มซ้ำ
   const [existingLog] = await db
     .select()
     .from(drivingLogs)
-    .where(eq(drivingLogs.status, "active"))
+    .where(
+      and(eq(drivingLogs.status, "active"), eq(drivingLogs.shiftId, shiftId)),
+    )
     .limit(1);
-  if (existingLog) {
-    throw new Error("มี log ที่กำลังทำอยู่ กรุณาจบก่อนเริ่มงานใหม่");
-  }
+  if (existingLog)
+    throw new ConflictError("มี log ที่กำลังทำอยู่ กรุณาจบก่อนเริ่มงานใหม่");
 
   // insert driving log
   const [log] = await db
@@ -132,8 +135,13 @@ export async function getCurrentDriving(
     .select({ log: drivingLogs })
     .from(drivingLogs)
     .innerJoin(carDriverShifts, eq(drivingLogs.shiftId, carDriverShifts.id))
-    .where(eq(carDriverShifts.driverId, driverId))
-    .orderBy(drivingLogs.startedAt)
+    .where(
+      and(
+        eq(drivingLogs.status, "active"),
+        eq(carDriverShifts.driverId, driverId),
+      ),
+    )
+    .orderBy(desc(drivingLogs.startedAt))
     .limit(1);
 
   return res?.log ?? null;
