@@ -26,10 +26,10 @@ export async function getNotifications(
       });
     }
 
-    const { carId, alertType, from, to, limit, offset } =
-      querySchema.parse(req.query);
+    const { carId, alertType, from, to, limit, offset } = querySchema.parse(
+      req.query,
+    );
     const data = await notificationsService.getNotifications({
-      carId,
       alertType,
       from,
       to,

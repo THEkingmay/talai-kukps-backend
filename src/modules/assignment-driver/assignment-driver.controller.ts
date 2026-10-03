@@ -83,7 +83,6 @@ export const create = async (
       startTime: new Date(req.body.startTime),
       endTime: new Date(req.body.endTime),
     });
-    console.log("Validated Data", validatedData);
     const insertedData = await assignmentDriverService.create(validatedData);
     res.json({ success: true, data: insertedData });
   } catch (error) {

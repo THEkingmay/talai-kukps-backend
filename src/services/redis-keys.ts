@@ -48,21 +48,15 @@ export const redisKeys = {
     /** ตำแหน่งล่าสุดจาก MQTT — hSet hash, scan ด้วย `car:position:*` */
     position: (carId: string) => `car:position:${carId}` as const,
 
-    /** driverId ที่ active อยู่ตอนนี้ — plain string */
-    activeDriver: (carId: string) => `car:activeDriver:${carId}` as const,
-
     /** flag กัน spam alert กรณีไม่มี driverId — plain bool */
-    alertSent: (carId: string) => `car:alertSent:${carId}` as const,
+    lastSended: (carId: string) => `car:lastSended:${carId}` as const,
+
+    currentState: (carId: string) => `car:state:${carId}` as const,
 
     /** pattern สำหรับ keys() scan ทุก car position */
     positionPattern: "car:position:*" as const,
 
     /** แปลง key กลับเป็น carId */
     idFromPositionKey: (key: string) => key.replace("car:position:", ""),
-  },
-
-  driver: {
-    /** สถานะการขับของคนขับ — JSON string */
-    state: (driverId: string) => `driver:state:${driverId}` as const,
   },
 } as const;

@@ -10,28 +10,21 @@ import {
 } from "../../middlewares/error.middleware.ts";
 // Redis value shape สำหรับ driver state
 export interface DriverRedisState {
-  status: "active" | "ended";
+  status: "active";
   carId: string;
   logId: string;
-  alertSentAt: string | null;
   driverName: string | null;
   driverPhone: string | null;
   carNumber: string | null;
 }
 
 async function setDriverRedisState(
-  driverId: string,
+  carId: string,
   state: DriverRedisState,
 ): Promise<void> {
-  await redisService.set(redisKeys.driver.state(driverId), state);
+  await redisService.set(redisKeys.car.currentState(carId), state);
 }
 
-async function setActiveDriverForCar(
-  carId: string,
-  driverId: string,
-): Promise<void> {
-  await redisService.set(redisKeys.car.activeDriver(carId), driverId);
-}
 // คนขับกดเริ่มงาน — ตรวจ shift แล้ว insert log + sync Redis */
 export async function startDriving(
   shiftId: string,
@@ -75,20 +68,18 @@ export async function startDriving(
     .insert(drivingLogs)
     .values({ shiftId, status: "active" })
     .returning();
-
   // sync Redis — reset alertSentAt ด้วย เผื่อเคย alert ไปแล้วก่อนหน้า
   const state: DriverRedisState = {
     status: "active",
     carId: shift.shift.carId,
     logId: log.id,
-    alertSentAt: null,
     driverName: shift.driverName,
     driverPhone: shift.driverPhone,
     carNumber: shift.carNumber,
   };
-  await setDriverRedisState(driverId, state);
-  await setActiveDriverForCar(shift.shift.carId, driverId);
-
+  await setDriverRedisState(shift.shift.carId, state);
+  // เคลีย alreadySent flag
+  await redisService.delete(redisKeys.car.lastSended(shift.shift.carId));
   return log;
 }
 
@@ -125,18 +116,8 @@ export async function endDriving(
     .where(eq(drivingLogs.id, logId))
     .returning();
 
-  // update Redis (คง key ไว้เพื่อให้ MQTT ยัง lookup driverId ได้)
-  const currentState = (await redisService.get(
-    redisKeys.driver.state(driverId),
-  )) as DriverRedisState | null;
-
-  if (currentState) {
-    await setDriverRedisState(driverId, {
-      ...currentState,
-      status: "ended",
-    });
-  }
-
+  // ลบจาก redis
+  await redisService.delete(redisKeys.car.currentState(result.carId));
   return updated;
 }
 

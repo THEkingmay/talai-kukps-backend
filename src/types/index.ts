@@ -22,12 +22,8 @@ export interface WebSocketAlertBroadcastType {
   type: "alert";
   alertType: "driver_not_confirmed";
   carId: string;
-  driverId: string | null;
   message: string;
   timestamp: string;
-  driverName: string | null;
-  driverPhone: string | null;
-  carNumber: string | null;
 }
 
 export type WebSocketBroadcastType =

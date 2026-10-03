@@ -10,7 +10,10 @@ import { errorMiddleware } from "./middlewares/error.middleware.ts";
 import type { MqttMessageType } from "./types/index.ts";
 import { insertMany } from "./modules/car-history-logs/car-history-logs.service.ts";
 import http from "http";
-import type { NewCarHistoryLog } from "./db/types.ts";
+import type {
+  NewCarHistoryLog,
+  NotificationPayloadType_driver_not_confirmed,
+} from "./db/types.ts";
 import rateLimit from "express-rate-limit";
 import emailService from "./services/email.service.ts";
 import s3Service from "./services/s3.service.ts";
@@ -21,29 +24,23 @@ import { redisKeys } from "./services/redis-keys.ts";
 
 const VALID_STATUSES = ["active", "inactive"] as const;
 
+const ALERT_COOLDOWN_MS = 60 * 1000; // 1 minute
+
 /**
  * ตรวจสอบว่าคนขับที่ควรขับรถคันนี้ได้กดเริ่มงานหรือยัง
  * ถ้าไม่ได้กด (หรือกดหยุดแล้ว) จะส่ง WebSocket alert ไปยัง client ทั้งหมด
  * ส่งได้ครั้งเดียวต่อ session (กัน spam ด้วย alertSentAt flag ใน Redis)
  */
 async function checkDriverConfirmation(carId: string): Promise<void> {
-  // reverse lookup: หา driverId ของคนที่ควรขับรถคันนี้
-  const driverId = (await redisService.get(
-    redisKeys.car.activeDriver(carId),
-  )) as string | null;
-  if (!driverId) {
-    // ไม่มีคนขับ assigned ใน Redis เลย (ไม่เคยกดเริ่มงาน)
-    await sendDriverAlert(carId, null, null);
-    return;
-  }
-
-  const driverState = (await redisService.get(
-    redisKeys.driver.state(driverId),
+  // ดูว่ามี state ของcarId นี้ไหม ถ้ามีแปลว่ากำลังวิ่งถ้าไม่มีแปลว่าไม่ได้กำลังวิ่ง
+  const currentState = (await redisService.get(
+    redisKeys.car.currentState(carId),
   )) as DriverRedisState | null;
 
-  if (!driverState || driverState.status === "ended") {
-    // คนขับมีอยู่ใน Redis แต่ status เป็น ended (กดหยุดแล้ว)
-    await sendDriverAlert(carId, driverId, driverState);
+  if (!currentState) {
+    // ไม่มีคนขับ assigned ใน Redis เลย (ไม่เคยกดเริ่มงาน)
+    await sendDriverAlert(carId);
+    return;
   }
 }
 
@@ -51,47 +48,35 @@ async function checkDriverConfirmation(carId: string): Promise<void> {
  * ส่ง WebSocket alert ไปยัง client ทั้งหมด (ครั้งเดียวต่อ session)
  * ถ้า alertSentAt มีค่าแล้ว แปลว่าส่งไปแล้ว — ไม่ส่งซ้ำ
  */
-async function sendDriverAlert(
-  carId: string,
-  driverId: string | null,
-  driverState: DriverRedisState | null,
-): Promise<void> {
-  // กรณีมี driverId: ใช้ alertSentAt ใน driver state เป็น flag
-  if (driverState?.alertSentAt) return;
+async function sendDriverAlert(carId: string): Promise<void> {
+  const lastSended = await redisService.get(redisKeys.car.lastSended(carId));
+  if (
+    lastSended &&
+    new Date().getTime() - new Date(lastSended as string).getTime() <
+      ALERT_COOLDOWN_MS
+  )
+    return;
+  await redisService.set(
+    redisKeys.car.lastSended(carId),
+    new Date().toISOString(),
+  );
 
-  // กรณีไม่มี driverId เลย: ใช้ Redis key แยกต่างหากเป็น flag
-  if (!driverId) {
-    const alreadySent = await redisService.get(redisKeys.car.alertSent(carId));
-    if (alreadySent) return;
-    await redisService.set(redisKeys.car.alertSent(carId), true);
-  }
-
-  // mark ว่าส่งแล้วใน driver state
-  if (driverId && driverState) {
-    await redisService.set(redisKeys.driver.state(driverId), {
-      ...driverState,
-      alertSentAt: new Date().toISOString(),
-    });
-  }
-
-  const driverName = driverState?.driverName || "ไม่ระบุ";
-  const driverPhone = driverState?.driverPhone || "ไม่ระบุ";
-  const carNumber = driverState?.carNumber || "ไม่ระบุ";
   const message = "รถกำลังวิ่งแต่คนขับยังไม่ได้กดเริ่มงาน";
   const timestamp = new Date().toISOString();
 
   console.warn(
-    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"}) (driverName: ${driverName}, driverPhone: ${driverPhone})`,
+    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${carId ?? "ไม่ระบุ"})`,
   );
 
   // บันทึก log ไว้ใน DB ให้ admin ที่เข้ามาทีหลังดูย้อนหลังได้
   // fire-and-forget: ถ้า DB ชั่วคราว insert fail ไม่ควรบล็อก alert realtime (แค่ log error)
   insertNotification({
     alertType: "driver_not_confirmed",
-    carId,
-    driverId,
     message,
-    payload: { driverName, driverPhone, carNumber, timestamp },
+    payload: {
+      carId,
+      timestamp,
+    } as NotificationPayloadType_driver_not_confirmed,
   }).catch((err) =>
     console.error("[ALERT] Failed to insert notification:", err),
   );
@@ -100,10 +85,6 @@ async function sendDriverAlert(
     type: "alert",
     alertType: "driver_not_confirmed",
     carId,
-    driverId,
-    driverName,
-    driverPhone,
-    carNumber,
     message,
     timestamp,
   });

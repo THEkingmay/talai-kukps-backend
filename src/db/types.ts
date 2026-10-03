@@ -113,8 +113,9 @@ export type DrivingLog = z.infer<typeof selectDrivingLogSchema>;
 export type NewDrivingLog = z.infer<typeof insertDrivingLogSchema>;
 export type UpdatedDrivingLog = z.infer<typeof updateDrivingLogSchema>;
 
-export const notificationAlertTypeSchema =
-  createSelectSchema(notificationAlertTypeEnum);
+export const notificationAlertTypeSchema = createSelectSchema(
+  notificationAlertTypeEnum,
+);
 export type NotificationAlertType = z.infer<typeof notificationAlertTypeSchema>;
 
 export const selectNotificationSchema = createSelectSchema(notifications);
@@ -122,3 +123,8 @@ export const insertNotificationSchema = createInsertSchema(notifications);
 
 export type Notification = z.infer<typeof selectNotificationSchema>;
 export type NewNotification = z.infer<typeof insertNotificationSchema>;
+
+export type NotificationPayloadType_driver_not_confirmed = {
+  carId: string;
+  timestamp: string;
+};

@@ -161,26 +161,19 @@ export const drivingLogs = pgTable("driving_logs", {
 
 // บันทึก log alert ที่ระบบส่งแจ้งเตือนออก (1 แถว = 1 alert ที่ broadcast) ให้ admin ดูย้อนหลังได้
 // car_id/driver_id เป็น nullable เพราะออกแบบ generic เผื่อ alert ที่ไม่เกี่ยวกับรถ/คนขับ
-export const notifications = pgTable(
-  "notifications",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    alertType: notificationAlertTypeEnum("alert_type").notNull(),
-    carId: uuid("car_id").references(() => cars.id, {
-      onDelete: "cascade",
-    }),
-    driverId: uuid("driver_id").references(() => users.id, {
-      onDelete: "cascade",
-    }),
-    message: text("message").notNull(),
-    // snapshot รายละเอียดเฉพาะ alert type (เช่น driverName, driverPhone, carNumber, timestamp)
-    payload: jsonb("payload").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => [
-    index("notifications_created_at_idx").on(table.createdAt),
-    index("notifications_car_id_idx").on(table.carId),
-  ],
-);
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  alertType: notificationAlertTypeEnum("alert_type").notNull(),
+  // carId: uuid("car_id").references(() => cars.id, {
+  //   onDelete: "cascade",
+  // }),
+  // driverId: uuid("driver_id").references(() => users.id, {
+  //   onDelete: "cascade",
+  // }),
+  message: text("message").notNull(),
+  // snapshot รายละเอียดเฉพาะ alert type
+  payload: jsonb("payload").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

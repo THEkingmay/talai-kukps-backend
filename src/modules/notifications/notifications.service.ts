@@ -4,7 +4,6 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import type { NewNotification, NotificationAlertType } from "../../db/types.ts";
 
 export interface GetNotificationsParams {
-  carId?: string;
   alertType?: NotificationAlertType;
   from?: Date;
   to?: Date;
@@ -21,7 +20,6 @@ export async function insertNotification(
 
 /** ดู log alert ย้อนหลัง เรียงจากใหม่ไปเก่า (เฉพาะ admin/superadmin — คุมที่ controller) */
 export async function getNotifications({
-  carId,
   alertType,
   from,
   to,
@@ -29,7 +27,6 @@ export async function getNotifications({
   offset,
 }: GetNotificationsParams) {
   const conditions = [];
-  if (carId) conditions.push(eq(notifications.carId, carId));
   if (alertType) conditions.push(eq(notifications.alertType, alertType));
   if (from) conditions.push(gte(notifications.createdAt, from));
   if (to) conditions.push(lte(notifications.createdAt, to));
