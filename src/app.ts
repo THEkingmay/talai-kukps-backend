@@ -30,7 +30,6 @@ async function checkDriverConfirmation(carId: string): Promise<void> {
   const driverId = (await redisService.get(
     redisKeys.car.activeDriver(carId),
   )) as string | null;
-
   if (!driverId) {
     // ไม่มีคนขับ assigned ใน Redis เลย (ไม่เคยกดเริ่มงาน)
     await sendDriverAlert(carId, null, null);
@@ -75,7 +74,7 @@ async function sendDriverAlert(
   }
 
   console.warn(
-    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"})`,
+    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"}) (driverName: ${driverState?.driverName ?? "ไม่ระบุ"}, driverPhone: ${driverState?.driverPhone ?? "ไม่ระบุ"})`,
   );
 
   websocketService.broadcast({
@@ -83,6 +82,9 @@ async function sendDriverAlert(
     alertType: "driver_not_confirmed",
     carId,
     driverId,
+    driverName: driverState?.driverName || "ไม่ระบุ",
+    driverPhone: driverState?.driverPhone || "ไม่ระบุ",
+    carNumber: driverState?.carNumber || "ไม่ระบุ",
     message: "รถกำลังวิ่งแต่คนขับยังไม่ได้กดเริ่มงาน",
     timestamp: new Date().toISOString(),
   });

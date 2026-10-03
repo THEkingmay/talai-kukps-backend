@@ -25,11 +25,13 @@ export interface WebSocketAlertBroadcastType {
   driverId: string | null;
   message: string;
   timestamp: string;
+  driverName: string | null;
+  driverPhone: string | null;
+  carNumber: string | null;
 }
 
 export type WebSocketBroadcastType =
-  | WebSocketLocationBroadcastType
-  | WebSocketAlertBroadcastType;
+  WebSocketLocationBroadcastType | WebSocketAlertBroadcastType;
 
 // Extend Express Request to carry authenticated user
 declare global {

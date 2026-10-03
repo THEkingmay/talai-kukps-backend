@@ -1,7 +1,7 @@
 import db from "../../db/index.ts";
 import redisService from "../../services/redis.service.ts";
 import { redisKeys } from "../../services/redis-keys.ts";
-import { drivingLogs, carDriverShifts } from "../../db/schema.ts";
+import { drivingLogs, carDriverShifts, users, cars } from "../../db/schema.ts";
 import { eq, and, desc } from "drizzle-orm";
 import type { DrivingLog } from "../../db/types.ts";
 import {
@@ -14,6 +14,9 @@ export interface DriverRedisState {
   carId: string;
   logId: string;
   alertSentAt: string | null;
+  driverName: string | null;
+  driverPhone: string | null;
+  carNumber: string | null;
 }
 
 async function setDriverRedisState(
@@ -36,8 +39,15 @@ export async function startDriving(
 ): Promise<DrivingLog> {
   // ตรวจว่า shift นี้ถูก assign ให้ driver คนนี้จริง
   const [shift] = await db
-    .select()
+    .select({
+      shift: carDriverShifts,
+      driverName: users.firstName,
+      driverPhone: users.phoneNumber,
+      carNumber: cars.carNumber,
+    })
     .from(carDriverShifts)
+    .innerJoin(users, eq(carDriverShifts.driverId, users.id))
+    .innerJoin(cars, eq(carDriverShifts.carId, cars.id))
     .where(
       and(
         eq(carDriverShifts.id, shiftId),
@@ -69,12 +79,15 @@ export async function startDriving(
   // sync Redis — reset alertSentAt ด้วย เผื่อเคย alert ไปแล้วก่อนหน้า
   const state: DriverRedisState = {
     status: "active",
-    carId: shift.carId,
+    carId: shift.shift.carId,
     logId: log.id,
     alertSentAt: null,
+    driverName: shift.driverName,
+    driverPhone: shift.driverPhone,
+    carNumber: shift.carNumber,
   };
   await setDriverRedisState(driverId, state);
-  await setActiveDriverForCar(shift.carId, driverId);
+  await setActiveDriverForCar(shift.shift.carId, driverId);
 
   return log;
 }
