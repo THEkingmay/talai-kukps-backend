@@ -15,6 +15,7 @@ import rateLimit from "express-rate-limit";
 import emailService from "./services/email.service.ts";
 import s3Service from "./services/s3.service.ts";
 import { updateStatusFromServer } from "./modules/cars/cars.service.ts";
+import { insertNotification } from "./modules/notifications/notifications.service.ts";
 import type { DriverRedisState } from "./modules/driving-logs/driving-logs.service.ts";
 import { redisKeys } from "./services/redis-keys.ts";
 
@@ -73,8 +74,26 @@ async function sendDriverAlert(
     });
   }
 
+  const driverName = driverState?.driverName || "ไม่ระบุ";
+  const driverPhone = driverState?.driverPhone || "ไม่ระบุ";
+  const carNumber = driverState?.carNumber || "ไม่ระบุ";
+  const message = "รถกำลังวิ่งแต่คนขับยังไม่ได้กดเริ่มงาน";
+  const timestamp = new Date().toISOString();
+
   console.warn(
-    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"}) (driverName: ${driverState?.driverName ?? "ไม่ระบุ"}, driverPhone: ${driverState?.driverPhone ?? "ไม่ระบุ"})`,
+    `[ALERT] รถ ${carId} วิ่งอยู่แต่คนขับยังไม่ได้กดเริ่มงาน (driverId: ${driverId ?? "ไม่ระบุ"}) (driverName: ${driverName}, driverPhone: ${driverPhone})`,
+  );
+
+  // บันทึก log ไว้ใน DB ให้ admin ที่เข้ามาทีหลังดูย้อนหลังได้
+  // fire-and-forget: ถ้า DB ชั่วคราว insert fail ไม่ควรบล็อก alert realtime (แค่ log error)
+  insertNotification({
+    alertType: "driver_not_confirmed",
+    carId,
+    driverId,
+    message,
+    payload: { driverName, driverPhone, carNumber, timestamp },
+  }).catch((err) =>
+    console.error("[ALERT] Failed to insert notification:", err),
   );
 
   websocketService.broadcast({
@@ -82,11 +101,11 @@ async function sendDriverAlert(
     alertType: "driver_not_confirmed",
     carId,
     driverId,
-    driverName: driverState?.driverName || "ไม่ระบุ",
-    driverPhone: driverState?.driverPhone || "ไม่ระบุ",
-    carNumber: driverState?.carNumber || "ไม่ระบุ",
-    message: "รถกำลังวิ่งแต่คนขับยังไม่ได้กดเริ่มงาน",
-    timestamp: new Date().toISOString(),
+    driverName,
+    driverPhone,
+    carNumber,
+    message,
+    timestamp,
   });
 }
 

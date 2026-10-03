@@ -8,6 +8,7 @@ import adminInvitesRouter from "../modules/admin-invites/admin-invites.route.ts"
 import carHistoryLogsRouter from "../modules/car-history-logs/car-history-logs.route.ts";
 import assignmentDriverRouter from "../modules/assignment-driver/assignment-driver.route.ts";
 import drivingLogsRouter from "../modules/driving-logs/driving-logs.route.ts";
+import notificationsRouter from "../modules/notifications/notifications.route.ts";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/admin-invites", adminInvitesRouter);
 router.use("/car-history-logs", carHistoryLogsRouter);
 router.use("/assignment-driver", assignmentDriverRouter);
 router.use("/driving-logs", drivingLogsRouter);
+router.use("/notifications", notificationsRouter);
 
 export default router;
