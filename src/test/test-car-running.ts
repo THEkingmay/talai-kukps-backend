@@ -265,14 +265,14 @@ startCarSimulator({
   route: car1Route,
 });
 
-startCarSimulator({
-  clientId: car2ClientId,
-  carName: "CAR2 (หน้ามอ)",
-  mqttUrl,
-  username: car2Username,
-  password: car2Password,
-  topic: car2Topic,
-  route: car2Route,
-});
+// startCarSimulator({
+//   clientId: car2ClientId,
+//   carName: "CAR2 (หน้ามอ)",
+//   mqttUrl,
+//   username: car2Username,
+//   password: car2Password,
+//   topic: car2Topic,
+//   route: car2Route,
+// });
 
 console.log("Car simulators started. Press Ctrl+C to stop.");

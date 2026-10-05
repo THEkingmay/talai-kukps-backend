@@ -1,6 +1,11 @@
 import db from "../../db/index.ts";
-import { cars, carHistoryLog } from "../../db/schema.ts";
-import { eq, desc, isNull } from "drizzle-orm";
+import {
+  cars,
+  carHistoryLog,
+  carDriverShifts,
+  users,
+} from "../../db/schema.ts";
+import { eq, desc, isNull, and, gte, lte } from "drizzle-orm";
 import type { NewCar, ResponseCarData } from "../../db/types.ts";
 import { NotFoundError } from "../../middlewares/error.middleware.ts";
 import { generateMqttCredential } from "./utils/mqtt-credential.ts";
@@ -14,14 +19,70 @@ import type { Request } from "express";
 export async function getAll(req: Request): Promise<ResponseCarData[]> {
   // ตรวจสอบ req.user ถ้าเป็น แอดมินให้ส่งที่ลบกลับไปด้วย
   // แต่ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
+  const NOW = new Date();
 
   if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
-    const carList = await db.select().from(cars);
-    return carList.map(({ encryptedMqttPassword, ...car }) => car);
+    const carList = await db
+      .select({
+        id: cars.id,
+        createdAt: cars.createdAt,
+        deletedAt: cars.deletedAt,
+        status: cars.status,
+        updatedBy: cars.updatedBy,
+        updatedAt: cars.updatedAt,
+        routeId: cars.routeId,
+        carNumber: cars.carNumber,
+        driverData: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          email: users.email,
+        },
+      })
+      .from(cars)
+      .leftJoin(
+        carDriverShifts,
+        and(
+          eq(cars.id, carDriverShifts.carId),
+          lte(carDriverShifts.startTime, NOW),
+          gte(carDriverShifts.endTime, NOW),
+        ),
+      )
+      .leftJoin(users, eq(carDriverShifts.driverId, users.id));
+    return carList;
   }
   // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
-  const carList = await db.select().from(cars).where(isNull(cars.deletedAt));
-  return carList.map(({ encryptedMqttPassword, ...car }) => car);
+  const carList = await db
+    .select({
+      id: cars.id,
+      createdAt: cars.createdAt,
+      deletedAt: cars.deletedAt,
+      status: cars.status,
+      updatedBy: cars.updatedBy,
+      updatedAt: cars.updatedAt,
+      routeId: cars.routeId,
+      carNumber: cars.carNumber,
+      driverData: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        email: users.email,
+      },
+    })
+    .from(cars)
+    .leftJoin(
+      carDriverShifts,
+      and(
+        eq(cars.id, carDriverShifts.carId),
+        lte(carDriverShifts.startTime, NOW),
+        gte(carDriverShifts.endTime, NOW),
+      ),
+    )
+    .leftJoin(users, eq(carDriverShifts.driverId, users.id))
+    .where(isNull(cars.deletedAt));
+  return carList;
 }
 
 export async function getById(
@@ -30,17 +91,72 @@ export async function getById(
 ): Promise<ResponseCarData | null> {
   // ตรวจสอบ req.user ถ้าเป็น แอดมินให้ส่งที่ลบกลับไปด้วย
   // แต่ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
+  const NOW = new Date();
   if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
-    const [car] = await db.select().from(cars).where(eq(cars.id, id)).limit(1);
-    if (!car) return null;
-    const { encryptedMqttPassword, ...resData } = car;
-    return resData;
+    const [carData] = await db
+      .select({
+        id: cars.id,
+        createdAt: cars.createdAt,
+        deletedAt: cars.deletedAt,
+        status: cars.status,
+        updatedBy: cars.updatedBy,
+        updatedAt: cars.updatedAt,
+        routeId: cars.routeId,
+        carNumber: cars.carNumber,
+        driverData: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          email: users.email,
+        },
+      })
+      .from(cars)
+      .leftJoin(
+        carDriverShifts,
+        and(
+          eq(cars.id, carDriverShifts.carId),
+          lte(carDriverShifts.startTime, NOW),
+          gte(carDriverShifts.endTime, NOW),
+        ),
+      )
+      .leftJoin(users, eq(carDriverShifts.driverId, users.id))
+      .where(eq(cars.id, id))
+      .limit(1);
+    return carData;
   }
   // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
-  const [car] = await db.select().from(cars).where(eq(cars.id, id)).limit(1);
-  if (!car || car.deletedAt !== null) return null;
-  const { encryptedMqttPassword, ...resData } = car;
-  return resData;
+  const [carData] = await db
+    .select({
+      id: cars.id,
+      createdAt: cars.createdAt,
+      deletedAt: cars.deletedAt,
+      status: cars.status,
+      updatedBy: cars.updatedBy,
+      updatedAt: cars.updatedAt,
+      routeId: cars.routeId,
+      carNumber: cars.carNumber,
+      driverData: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        email: users.email,
+      },
+    })
+    .from(cars)
+    .leftJoin(
+      carDriverShifts,
+      and(
+        eq(cars.id, carDriverShifts.carId),
+        lte(carDriverShifts.startTime, NOW),
+        gte(carDriverShifts.endTime, NOW),
+      ),
+    )
+    .leftJoin(users, eq(carDriverShifts.driverId, users.id))
+    .where(and(isNull(cars.deletedAt), eq(cars.id, id)))
+    .limit(1);
+  return carData;
 }
 
 export async function create(

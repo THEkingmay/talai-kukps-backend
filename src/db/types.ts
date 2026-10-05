@@ -78,10 +78,23 @@ export const insertCarSchema = dbInsertCarSchema.extend({
 
 export type Car = z.infer<typeof selectCarSchema>;
 export type NewCar = z.infer<typeof insertCarSchema>;
-export type ResponseCarData = Omit<
-  Car,
-  "encryptedMqttPassword" | "carMqttUsername"
->;
+export type ResponseCarData = {
+  id: string;
+  createdAt: Date;
+  deletedAt: Date | null;
+  updatedBy: string | null;
+  updatedAt: Date;
+  routeId: string | null;
+  carNumber: string;
+  status: "active" | "inactive";
+  driverData?: {
+    id: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+    email: string | null;
+  } | null;
+};
 
 export const selectCarHistoryLogSchema = createSelectSchema(carHistoryLog, {
   lat: latSchema,
