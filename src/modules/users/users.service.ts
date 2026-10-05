@@ -80,6 +80,24 @@ export async function updateProfile(
       "kukps-talai-avatar",
       fileName,
     );
+
+    // ลบรูปภาพเก่า (ถ้ามี)
+    const [oldImage] = await db
+      .select({ profileImageUrl: users.profileImageUrl })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    if (oldImage && oldImage.profileImageUrl) {
+      // profileImageUrl ที่เก็บใน DB เป็น public URL ต้องแปลงกลับเป็น S3 key ก่อนลบ
+      // (ถ้าเอา URL ทั้งแท่งไปเป็น key จะเจอ SignatureDoesNotMatch จาก S3)
+      const oldKey = s3Service.extractKey(
+        "kukps-talai-avatar",
+        oldImage.profileImageUrl,
+      );
+      if (oldKey) {
+        await s3Service.deleteFile("kukps-talai-avatar", oldKey);
+      }
+    }
   }
 
   // ป้องกัน Error จาก Drizzle: เช็คก่อนว่ามีข้อมูลให้อัปเดตจริงๆ ไหม

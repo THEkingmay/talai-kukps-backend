@@ -61,8 +61,14 @@ export const getByDriverId = async (
 ) => {
   try {
     checkPermission(req, true);
+    if (!req.user) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
     const { id } = uuidSchema.parse(req.params);
-    const assignmentDrivers = await assignmentDriverService.getByDriverId(id);
+    const assignmentDrivers = await assignmentDriverService.getByDriverId(
+      id,
+      req.user.role,
+    );
     res.json({ success: true, data: assignmentDrivers });
   } catch (error) {
     next(error);

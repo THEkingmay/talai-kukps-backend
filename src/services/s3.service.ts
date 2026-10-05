@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 class S3Service {
   private s3Client: S3Client | null = null;
   connect() {
@@ -50,6 +54,29 @@ class S3Service {
     const baseUrl = endpoint.replace("/s3", "/object/public");
 
     return `${baseUrl}/${bucketKey}/${key}`;
+  }
+
+  // แปลง public URL กลับเป็น S3 key (ถ้า URL ไม่ตรงกับ format ของเราให้คืน null)
+  extractKey(bucketKey: string, publicUrl: string): string | null {
+    const endpoint = process.env.STORAGE_ENDPOINT!;
+    const baseUrl = endpoint.replace("/s3", "/object/public");
+    const prefix = `${baseUrl}/${bucketKey}/`;
+
+    if (!publicUrl.startsWith(prefix)) return null;
+    return publicUrl.slice(prefix.length) || null;
+  }
+
+  async deleteFile(bucketKey: string, key: string) {
+    const command = new DeleteObjectCommand({
+      Bucket: bucketKey,
+      Key: key,
+    });
+
+    try {
+      await this.s3Client?.send(command);
+    } catch (error) {
+      throw new Error(`Failed to delete from S3: ${(error as Error).message}`);
+    }
   }
 }
 

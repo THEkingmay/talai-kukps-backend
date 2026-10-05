@@ -3,8 +3,8 @@ import type {
   NewCarDriverShift,
 } from "../../db/types.ts";
 import db from "../../db/index.ts";
-import { eq } from "drizzle-orm";
-import { carDriverShifts } from "../../db/schema.ts";
+import { eq, and, isNull } from "drizzle-orm";
+import { carDriverShifts, cars } from "../../db/schema.ts";
 
 export async function getAll() {
   const assignmentDrivers = await db.select().from(carDriverShifts);
@@ -18,7 +18,25 @@ export async function getById(id: string) {
   return assignmentDriver;
 }
 
-export async function getByDriverId(id: string) {
+export async function getByDriverId(id: string, role: string) {
+  if (role === "driver") {
+    //ไม่ส่งที่รถถูกลบออกไป
+    const assignmentDrivers = await db
+      .select({
+        id: carDriverShifts.id,
+        createdAt: carDriverShifts.createdAt,
+        updatedBy: carDriverShifts.updatedBy,
+        updatedAt: carDriverShifts.updatedAt,
+        carId: carDriverShifts.carId,
+        driverId: carDriverShifts.driverId,
+        startTime: carDriverShifts.startTime,
+        endTime: carDriverShifts.endTime,
+      })
+      .from(carDriverShifts)
+      .innerJoin(cars, eq(carDriverShifts.carId, cars.id))
+      .where(and(eq(carDriverShifts.driverId, id), isNull(cars.deletedAt)));
+    return assignmentDrivers;
+  }
   const assignmentDrivers = await db
     .select()
     .from(carDriverShifts)
