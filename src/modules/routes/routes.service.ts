@@ -7,10 +7,14 @@ import type { Request } from "express";
 
 export async function getAll(req: Request): Promise<Route[]> {
   if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
-    return db.select().from(routes);
+    return db.select().from(routes).orderBy(routes.createdAt);
   }
   // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
-  return db.select().from(routes).where(isNull(routes.deletedAt));
+  return db
+    .select()
+    .from(routes)
+    .where(isNull(routes.deletedAt))
+    .orderBy(routes.createdAt);
 }
 
 export async function getById(id: string, req: Request): Promise<Route | null> {

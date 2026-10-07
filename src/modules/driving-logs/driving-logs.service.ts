@@ -163,9 +163,9 @@ export async function getMyLogs(
 }
 
 //  Admin ดู driving logs ทั้งหมด */
-export async function getAll(): Promise<
-  { log: DrivingLog; driverId: string; carId: string }[]
-> {
+export async function getAll(
+  driverId?: string,
+): Promise<{ log: DrivingLog; driverId: string; carId: string }[]> {
   const rows = await db
     .select({
       log: drivingLogs,

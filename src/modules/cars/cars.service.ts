@@ -49,7 +49,8 @@ export async function getAll(req: Request): Promise<ResponseCarData[]> {
           gte(carDriverShifts.endTime, NOW),
         ),
       )
-      .leftJoin(users, eq(carDriverShifts.driverId, users.id));
+      .leftJoin(users, eq(carDriverShifts.driverId, users.id))
+      .orderBy(cars.createdAt);
     return carList;
   }
   // ถ้าไม่ใช่แอดมินให้ส่งที่ไม่ถูกลบกลับไป
@@ -81,7 +82,8 @@ export async function getAll(req: Request): Promise<ResponseCarData[]> {
       ),
     )
     .leftJoin(users, eq(carDriverShifts.driverId, users.id))
-    .where(isNull(cars.deletedAt));
+    .where(isNull(cars.deletedAt))
+    .orderBy(cars.createdAt);
   return carList;
 }
 

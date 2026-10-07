@@ -9,6 +9,7 @@ const router = Router();
 router.use(sessionMiddleware);
 
 router.get("/", usersController.getAll);
+router.get("/:id", usersController.getById);
 router.get("/me", usersController.getMe);
 
 // ลบ users

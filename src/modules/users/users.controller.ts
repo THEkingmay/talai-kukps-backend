@@ -1,12 +1,35 @@
 import type { Request, Response, NextFunction } from "express";
 import * as usersService from "./users.service.ts";
 import { z } from "zod";
+import {
+  BadRequestError,
+  UnauthorizedError,
+} from "../../middlewares/error.middleware.ts";
 
-const idSchema = z.string().min(1);
+const uuidSchema = z.uuid();
 
 export async function getAll(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await usersService.getAll();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getById(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) {
+      throw new UnauthorizedError("คุณไม่มีสิทธิ์เข้าถึงข้อมูล");
+    }
+    if (req.user && !["admin", "superadmin"].includes(req.user.role)) {
+      throw new UnauthorizedError("คุณไม่มีสิทธิ์เข้าถึงข้อมูล");
+    }
+    const { id } = req.params;
+    const parsedId = uuidSchema.safeParse(id);
+    if (!parsedId || !parsedId.data)
+      throw new BadRequestError("ข้อมูลไอดีไม่ถูกต้อง");
+    const result = await usersService.getById(parsedId.data);
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -37,7 +60,7 @@ export async function deleteUser(
       });
 
     const { id } = req.params;
-    const parsedId = idSchema.parse(id);
+    const parsedId = uuidSchema.parse(id);
 
     await usersService.deleteUser(parsedId);
     res.json({ success: true, message: "ลบผู้ใช้เรียบร้อยแล้ว" });
@@ -60,7 +83,7 @@ export async function restoreDeletedUser(
       });
 
     const { id } = req.params;
-    const parsedId = idSchema.parse(id);
+    const parsedId = uuidSchema.parse(id);
 
     await usersService.restoreDeletedUser(parsedId);
     res.json({ success: true, message: "ยกเลิกการลบผู้ใช้" });
@@ -76,14 +99,12 @@ export async function updateProfile(
 ) {
   try {
     const { id } = req.params;
-    const userId = idSchema.parse(id);
+    const userId = uuidSchema.parse(id);
     if (req.user?.id !== id) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "ไม่มีสิทธิ์แก้ไข profile ของผู้ใช้อื่น",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "ไม่มีสิทธิ์แก้ไข profile ของผู้ใช้อื่น",
+      });
     }
     const { firstName, lastName, phoneNumber } = req.body;
     const profileImage = req.file;

@@ -4,6 +4,7 @@ import * as drivingLogsService from "./driving-logs.service.ts";
 import {
   ForbiddenError,
   NotFoundError,
+  BadRequestError,
 } from "../../middlewares/error.middleware.ts";
 
 const startBodySchema = z.object({
@@ -47,12 +48,24 @@ export const end = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 /** GET /driving-logs/current — Driver ดูงานที่กำลังทำอยู่ */
+/** GET /driving-logs/current?driverId={userId} — Admin ดูงานที่กำลังทำอยู่ของ driver */
 export const getCurrent = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
+    if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
+      const { driverId } = req.query;
+      if (!driverId) {
+        throw new BadRequestError("driverId is required");
+      }
+      const log = await drivingLogsService.getCurrentDriving(
+        driverId as string,
+      );
+      res.json({ success: true, data: log });
+      return;
+    }
     if (req.user?.role !== "driver") {
       throw new ForbiddenError(
         "เฉพาะคนขับเท่านั้นที่สามารถดูงานที่กำลังทำอยู่ได้",
@@ -85,7 +98,7 @@ export const getMy = async (
   }
 };
 
-/** GET /driving-logs — Admin ดูทั้งหมด */
+/** GET /driving-logs?driverId={driverId} — Admin ดูทั้งหมด */
 export const getAll = async (
   req: Request,
   res: Response,
@@ -95,7 +108,8 @@ export const getAll = async (
     if (!req.user || !["admin", "superadmin"].includes(req.user.role)) {
       throw new ForbiddenError("ไม่มีสิทธิ์เข้าถึง");
     }
-    const logs = await drivingLogsService.getAll();
+    const { driverId } = req.query;
+    const logs = await drivingLogsService.getAll(driverId as string);
     res.json({ success: true, data: logs });
   } catch (error) {
     next(error);

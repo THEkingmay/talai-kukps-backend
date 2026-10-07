@@ -12,7 +12,7 @@ import redisService from "../../services/redis.service.ts";
 import { redisKeys } from "../../services/redis-keys.ts";
 
 export async function getAll(): Promise<AdminInvite[]> {
-  return db.select().from(adminInvites);
+  return db.select().from(adminInvites).orderBy(adminInvites.createdAt);
 }
 
 export async function invite(

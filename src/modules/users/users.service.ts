@@ -21,7 +21,8 @@ export async function getAll(): Promise<Omit<User, "hashPassword">[]> {
       createdAt: users.createdAt,
       deletedAt: users.deletedAt,
     })
-    .from(users);
+    .from(users)
+    .orderBy(users.createdAt);
 }
 
 export async function getById(
