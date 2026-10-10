@@ -4,7 +4,7 @@ import type {
 } from "../../db/types.ts";
 import db from "../../db/index.ts";
 import { eq, and, isNull, sql } from "drizzle-orm";
-import { carDriverShifts, cars, drivingLogs } from "../../db/schema.ts";
+import { carDriverShifts, cars, drivingLogs, routes } from "../../db/schema.ts";
 import {
   BadRequestError,
   NotFoundError,
@@ -49,11 +49,17 @@ export async function getAll() {
       shift: carDriverShifts,
       carDeletedAt: cars.deletedAt,
       hasLog: hasDrivingLog,
+      moreData: {
+        carNumber: cars.carNumber,
+        routeName: routes.name,
+      },
     })
     .from(carDriverShifts)
-    .leftJoin(cars, eq(carDriverShifts.carId, cars.id));
-  return assignmentDrivers.map(({ shift, carDeletedAt, hasLog }) => ({
+    .leftJoin(cars, eq(carDriverShifts.carId, cars.id))
+    .leftJoin(routes, eq(routes.id, cars.routeId));
+  return assignmentDrivers.map(({ shift, carDeletedAt, hasLog, moreData }) => ({
     ...shift,
+    moreData,
     editOption: getEditOption(
       hasLog,
       shift.startTime,
@@ -64,48 +70,26 @@ export async function getAll() {
   }));
 }
 
-export async function getByDriverId(id: string, role: string) {
+export async function getByDriverId(id: string) {
   const now = new Date();
-  if (role === "driver") {
-    //ไม่ส่งที่รถถูกลบออกไป
-    const assignmentDrivers = await db
-      .select({
-        id: carDriverShifts.id,
-        createdAt: carDriverShifts.createdAt,
-        updatedBy: carDriverShifts.updatedBy,
-        updatedAt: carDriverShifts.updatedAt,
-        carId: carDriverShifts.carId,
-        driverId: carDriverShifts.driverId,
-        startTime: carDriverShifts.startTime,
-        endTime: carDriverShifts.endTime,
-        carDeletedAt: cars.deletedAt,
-        hasLog: hasDrivingLog,
-      })
-      .from(carDriverShifts)
-      .innerJoin(cars, eq(carDriverShifts.carId, cars.id))
-      .where(and(eq(carDriverShifts.driverId, id), isNull(cars.deletedAt)));
-    return assignmentDrivers.map(({ carDeletedAt, hasLog, ...shift }) => ({
-      ...shift,
-      editOption: getEditOption(
-        hasLog,
-        shift.startTime,
-        shift.endTime,
-        carDeletedAt,
-        now,
-      ),
-    }));
-  }
+
   const assignmentDrivers = await db
     .select({
       shift: carDriverShifts,
       carDeletedAt: cars.deletedAt,
       hasLog: hasDrivingLog,
+      moreData: {
+        carNumber: cars.carNumber,
+        routeName: routes.name,
+      },
     })
     .from(carDriverShifts)
     .leftJoin(cars, eq(carDriverShifts.carId, cars.id))
+    .leftJoin(routes, eq(routes.id, cars.routeId))
     .where(eq(carDriverShifts.driverId, id));
-  return assignmentDrivers.map(({ shift, carDeletedAt, hasLog }) => ({
+  return assignmentDrivers.map(({ shift, carDeletedAt, hasLog, moreData }) => ({
     ...shift,
+    moreData,
     editOption: getEditOption(
       hasLog,
       shift.startTime,

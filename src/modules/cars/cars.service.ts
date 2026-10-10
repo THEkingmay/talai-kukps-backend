@@ -7,7 +7,10 @@ import {
 } from "../../db/schema.ts";
 import { eq, desc, isNull, and, gte, lte } from "drizzle-orm";
 import type { NewCar, ResponseCarData } from "../../db/types.ts";
-import { NotFoundError } from "../../middlewares/error.middleware.ts";
+import {
+  BadRequestError,
+  NotFoundError,
+} from "../../middlewares/error.middleware.ts";
 import { generateMqttCredential } from "./utils/mqtt-credential.ts";
 import redisService from "../../services/redis.service.ts";
 import { redisKeys } from "../../services/redis-keys.ts";
@@ -196,6 +199,17 @@ export async function update(
 }
 
 export async function remove(id: string, updatedBy: string): Promise<void> {
+  // ตรวจสอบว่า รถคันนี้มีงานที่ขับในอนาคตหรือกำลังขับอยู่หรือไม่ ถ้ามีไม่ให้ลบ
+  const now = new Date();
+  const exitingCarUsingInShift = await db
+    .select({ id: carDriverShifts.id })
+    .from(carDriverShifts)
+    .where(
+      and(eq(carDriverShifts.carId, id), gte(carDriverShifts.endTime, now)),
+    );
+  if (exitingCarUsingInShift.length > 0)
+    throw new BadRequestError("ไม่สามารถลบรถที่ถูกมอบหมายงานในอนาคตได้");
+
   await db
     .update(cars)
     .set({ deletedAt: new Date(), updatedBy, updatedAt: new Date() })

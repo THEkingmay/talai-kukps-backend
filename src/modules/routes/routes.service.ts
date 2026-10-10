@@ -2,7 +2,10 @@ import db from "../../db/index.ts";
 import { routes, cars } from "../../db/schema.ts";
 import { eq, isNull } from "drizzle-orm";
 import type { Route, NewRoute } from "../../db/types.ts";
-import { NotFoundError } from "../../middlewares/error.middleware.ts";
+import {
+  BadRequestError,
+  NotFoundError,
+} from "../../middlewares/error.middleware.ts";
 import type { Request } from "express";
 
 export async function getAll(req: Request): Promise<Route[]> {
@@ -62,6 +65,18 @@ export async function update(
 }
 
 export async function remove(id: string, updatedBy: string): Promise<void> {
+  // ถ้าสายนี้ยังมีรถใช้อยู่ให้ส่งกลับไปและไม่ให้ลบ ต้องย้ายสายรถก่อน
+  const carUsingRoute = await db
+    .select({ carNumber: cars.carNumber })
+    .from(cars)
+    .where(eq(cars.routeId, id));
+  if (carUsingRoute.length > 0) {
+    const txt = carUsingRoute.map((c) => c.carNumber).join(", ");
+    throw new BadRequestError(
+      "ไม่สามารถลบสายได้ กรุณาย้ายสายของรถก่อน : " + txt,
+    );
+  }
+
   await db
     .update(routes)
     .set({ deletedAt: new Date(), updatedAt: new Date(), updatedBy })
