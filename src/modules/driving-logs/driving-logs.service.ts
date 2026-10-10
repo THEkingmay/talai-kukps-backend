@@ -12,7 +12,6 @@ import {
 export interface DriverRedisState {
   status: "active";
   carId: string;
-  logId: string;
   driverName: string | null;
   driverPhone: string | null;
   carNumber: string | null;
@@ -72,7 +71,7 @@ export async function startDriving(
   const state: DriverRedisState = {
     status: "active",
     carId: shift.shift.carId,
-    logId: log.id,
+    // logId: log.id,
     driverName: shift.driverName,
     driverPhone: shift.driverPhone,
     carNumber: shift.carNumber,
@@ -166,6 +165,19 @@ export async function getMyLogs(
 export async function getAll(
   driverId?: string,
 ): Promise<{ log: DrivingLog; driverId: string; carId: string }[]> {
+  if (driverId) {
+    const rows = await db
+      .select({
+        log: drivingLogs,
+        driverId: carDriverShifts.driverId,
+        carId: carDriverShifts.carId,
+      })
+      .from(drivingLogs)
+      .innerJoin(carDriverShifts, eq(drivingLogs.shiftId, carDriverShifts.id))
+      .where(eq(carDriverShifts.driverId, driverId))
+      .orderBy(drivingLogs.startedAt);
+    return rows;
+  }
   const rows = await db
     .select({
       log: drivingLogs,

@@ -39,21 +39,6 @@ export const getAll = async (
   }
 };
 
-export const getById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    checkPermission(req, true);
-    const { id } = uuidSchema.parse(req.params);
-    const assignmentDriver = await assignmentDriverService.getById(id);
-    res.json({ success: true, data: assignmentDriver });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const getByDriverId = async (
   req: Request,
   res: Response,
