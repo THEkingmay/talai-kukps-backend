@@ -115,3 +115,20 @@ export const getAll = async (
     next(error);
   }
 };
+
+// GET /driving-logs/active/all — Admin ดูงานที่กำลังทำอยู่ทั้งหมด
+export const getActiveAll = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.user || !["admin", "superadmin"].includes(req.user.role)) {
+      throw new ForbiddenError("ไม่มีสิทธิ์เข้าถึง");
+    }
+    const logs = await drivingLogsService.getActiveAll();
+    res.json({ success: true, data: logs });
+  } catch (error) {
+    next(error);
+  }
+};

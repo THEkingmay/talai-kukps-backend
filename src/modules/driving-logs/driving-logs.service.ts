@@ -171,6 +171,7 @@ export async function getAll(
         log: drivingLogs,
         driverId: carDriverShifts.driverId,
         carId: carDriverShifts.carId,
+
       })
       .from(drivingLogs)
       .innerJoin(carDriverShifts, eq(drivingLogs.shiftId, carDriverShifts.id))
@@ -186,6 +187,28 @@ export async function getAll(
     })
     .from(drivingLogs)
     .innerJoin(carDriverShifts, eq(drivingLogs.shiftId, carDriverShifts.id))
+    .orderBy(drivingLogs.startedAt);
+
+  return rows;
+}
+
+export async function getActiveAll(): Promise<{ log: DrivingLog; driverId: string; carId: string }[]> {
+  const rows = await db
+    .select({
+      log: drivingLogs,
+      driverId: carDriverShifts.driverId,
+      driverName: users.firstName,
+      driverPhone: users.phoneNumber,
+      profileImageUrl: users.profileImageUrl,
+      carId: carDriverShifts.carId,
+      carNumber: cars.carNumber,
+
+    })
+    .from(drivingLogs)
+    .innerJoin(carDriverShifts, eq(drivingLogs.shiftId, carDriverShifts.id))
+    .innerJoin(users, eq(carDriverShifts.driverId, users.id))
+    .innerJoin(cars, eq(carDriverShifts.carId, cars.id))
+    .where(eq(drivingLogs.status, "active"))
     .orderBy(drivingLogs.startedAt);
 
   return rows;

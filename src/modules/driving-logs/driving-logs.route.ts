@@ -9,6 +9,7 @@ router.use(sessionMiddleware);
 router.post("/start", drivingLogsController.start);
 router.post("/end", drivingLogsController.end);
 router.get("/current", drivingLogsController.getCurrent);
+router.get("/active/all", drivingLogsController.getActiveAll); // แอดมินดูงานที่กำลังทำทั้งหมด
 router.get("/my", drivingLogsController.getMy);
 router.get("/", drivingLogsController.getAll);
 
