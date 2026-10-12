@@ -147,6 +147,71 @@ const car2Route: RoutePoint[] = [
   { lat: 14.0216999564571, lng: 99.9888952763898, sequence: 360000 },
 ];
 
+// ---------------------- Route Interpolation ----------------------
+
+/**
+ * ระยะห่างเป้าหมาย (เมตร) ระหว่างจุดที่แทรกเพิ่ม
+ * ยิ่งค่าน้อย รถยิ่งขยับทีละนิดๆ (จุดยิ่งละเอียด)
+ * ปรับได้ผ่าน env: ROUTE_STEP_METERS
+ */
+const INTERPOLATION_STEP_METERS = Number(
+  process.env.ROUTE_STEP_METERS ?? 8,
+);
+
+/** ระยะห่างระหว่างสองพิกัดแบบประมาณ (เมตร) ด้วยสูตร equirectangular */
+function approxDistanceMeters(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  const EARTH_RADIUS_M = 6371000;
+  const toRad = Math.PI / 180;
+  const meanLatRad = ((a.lat + b.lat) / 2) * toRad;
+  const dLat = (b.lat - a.lat) * toRad;
+  const dLng = (b.lng - a.lng) * toRad;
+  const x = dLng * Math.cos(meanLatRad);
+  return Math.sqrt(dLat * dLat + x * x) * EARTH_RADIUS_M;
+}
+
+/**
+ * แทรกจุดละเอียดระหว่างจุดหลักของเส้นทาง โดยแบ่งแต่ละช่วง (segment)
+ * ออกเป็นจุดย่อยตามระยะห่างเป้าหมาย ทำให้รถค่อยๆ ขยับทีละนิดๆ
+ * แทนที่จะกระโดดข้ามระหว่างจุดใหญ่ ทำให้เส้นทางดูเนียนขึ้นมาก
+ */
+function interpolateRoute(
+  route: RoutePoint[],
+  stepMeters: number,
+): RoutePoint[] {
+  if (route.length < 2) return route;
+
+  const detailed: RoutePoint[] = [];
+
+  for (let i = 0; i < route.length - 1; i++) {
+    const start = route[i];
+    const end = route[i + 1];
+
+    const segmentDistance = approxDistanceMeters(start, end);
+    // จำนวนจุดย่อยของช่วงนี้ (อย่างน้อย 1 เพื่อไม่ให้จุดหาย)
+    const steps = Math.max(1, Math.round(segmentDistance / stepMeters));
+
+    // ใส่จุดเริ่มของช่วง โดยจุดสุดท้ายของช่วงจะถูกใส่ในรอบถัดไป
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps; // สัดส่วน 0..1
+      detailed.push({
+        lat: start.lat + (end.lat - start.lat) * t,
+        lng: start.lng + (end.lng - start.lng) * t,
+        sequence: Math.round(
+          start.sequence + (end.sequence - start.sequence) * t,
+        ),
+      });
+    }
+  }
+
+  // เก็บจุดสุดท้ายของเส้นทางไว้เป็นจุดปิด
+  detailed.push(route[route.length - 1]);
+
+  return detailed;
+}
+
 // ---------------------- MQTT Simulator ----------------------
 
 const PUBLISH_INTERVAL_MS = 3000; // publish ทุก 3 วินาที
@@ -255,6 +320,16 @@ if (
 }
 
 // เริ่ม simulator ทั้งสองคันพร้อมกัน (parallel)
+// ขยายเส้นทางให้ละเอียดขึ้นก่อนส่ง (รถจะขยับทีละนิดๆ)
+const car1RouteDetailed = interpolateRoute(car1Route, INTERPOLATION_STEP_METERS);
+const car2RouteDetailed = interpolateRoute(car2Route, INTERPOLATION_STEP_METERS);
+
+console.log(
+  `[route] car1: ${car1Route.length} จุด -> ${car1RouteDetailed.length} จุด, ` +
+    `car2: ${car2Route.length} จุด -> ${car2RouteDetailed.length} จุด ` +
+    `(ทุก ~${INTERPOLATION_STEP_METERS} ม.)`,
+);
+
 startCarSimulator({
   clientId: car1ClientId,
   carName: "CAR1 (หอใน)",
@@ -262,7 +337,7 @@ startCarSimulator({
   username: car1Username,
   password: car1Password,
   topic: car1Topic,
-  route: car1Route,
+  route: car1RouteDetailed,
 });
 
 // startCarSimulator({
@@ -272,7 +347,7 @@ startCarSimulator({
 //   username: car2Username,
 //   password: car2Password,
 //   topic: car2Topic,
-//   route: car2Route,
+//   route: car2RouteDetailed,
 // });
 
 console.log("Car simulators started. Press Ctrl+C to stop.");
