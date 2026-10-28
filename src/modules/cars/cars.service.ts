@@ -90,6 +90,19 @@ export async function getAll(req: Request): Promise<ResponseCarData[]> {
   return carList;
 }
 
+// รถที่ยังไม่ถูกลบ พร้อมสายที่ Admin กำหนด สำหรับใช้ภายใน server (เช่น ตัวรับ MQTT) ซึ่งไม่มี request
+export async function getActiveCarRoutes(): Promise<
+  { id: string; routeId: string | null }[]
+> {
+  return db
+    .select({
+      id: cars.id,
+      routeId: cars.routeId,
+    })
+    .from(cars)
+    .where(isNull(cars.deletedAt));
+}
+
 export async function getById(
   id: string,
   req: Request,
