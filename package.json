@@ -7,7 +7,7 @@
     "type": "module",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test": "node --test \"tests/**/*.test.cjs\"",
         "dev": "tsx watch src/app.ts",
         "build": "tsc",
         "start": "node dist/app.js"

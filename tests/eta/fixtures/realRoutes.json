@@ -1,0 +1,710 @@
+[
+  {
+    "id": "daa65a62-4190-451d-ba1f-a3a8ee87058e",
+    "name": "สายหน้ามอ",
+    "pathPoints": [
+      {
+        "lat": 14.0216999564571,
+        "lng": 99.9888952763898,
+        "name": "ต้นทางประตูมาลัยแมน",
+        "timeToNextSecs": 150
+      },
+      {
+        "lat": 14.0219126218308,
+        "lng": 99.9888120086708,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0219920624848,
+        "lng": 99.9856424788285,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0232518454148,
+        "lng": 99.9824885947317,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0235019677322,
+        "lng": 99.9811137786281,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0235227036436,
+        "lng": 99.9791713744228,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0230226643921,
+        "lng": 99.9790000238654,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0209819535785,
+        "lng": 99.9790239266514,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0210019824108,
+        "lng": 99.9783560782003,
+        "name": "หน้าอาคาร 80 ปี",
+        "timeToNextSecs": 100
+      },
+      {
+        "lat": 14.0209924285668,
+        "lng": 99.9776283656885,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0230751622295,
+        "lng": 99.9776386013576,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0235682176908,
+        "lng": 99.9773950185925,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0235645291104,
+        "lng": 99.9769069062112,
+        "name": "หน้าตึกคอนเวนชัน",
+        "timeToNextSecs": 40
+      },
+      {
+        "lat": 14.0235942691628,
+        "lng": 99.9760314493575,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0221581070805,
+        "lng": 99.9759831570908,
+        "name": "โรงอาหารกลาง 1",
+        "timeToNextSecs": 40
+      },
+      {
+        "lat": 14.0210378732077,
+        "lng": 99.9759445784596,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0210175030618,
+        "lng": 99.9757919672668,
+        "name": "ศร.2",
+        "timeToNextSecs": 5
+      },
+      {
+        "lat": 14.0210225596163,
+        "lng": 99.9752015766804,
+        "name": "คณะวิทย์กีฬา",
+        "timeToNextSecs": 5
+      },
+      {
+        "lat": 14.0210330675008,
+        "lng": 99.9740691374336,
+        "name": "โรงพยาบาลสัตว์",
+        "timeToNextSecs": 25
+      },
+      {
+        "lat": 14.021023606794,
+        "lng": 99.9721749839092,
+        "name": "คณะวิศวะ",
+        "timeToNextSecs": 100
+      },
+      {
+        "lat": 14.0247714661027,
+        "lng": 99.9721898816157,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0247341298474,
+        "lng": 99.9746972157069,
+        "name": "หอสมุด",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.0246926376807,
+        "lng": 99.9760432784948,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0237140187175,
+        "lng": 99.9760218228948,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0236934390869,
+        "lng": 99.9782804894689,
+        "name": "ท่ารถนนทรี 8",
+        "timeToNextSecs": 150
+      },
+      {
+        "lat": 14.0235738087755,
+        "lng": 99.9817088043143,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0231391301004,
+        "lng": 99.9831100881022,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0221184114921,
+        "lng": 99.9856642100218,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0220279120045,
+        "lng": 99.9887367679856,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0219919200024,
+        "lng": 99.9894396725179,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0218563707696,
+        "lng": 99.9901157404552,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0217366079086,
+        "lng": 99.9900675560109,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0218612299183,
+        "lng": 99.9895363252884,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0218875036448,
+        "lng": 99.9889945439329,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0216999564571,
+        "lng": 99.9888952763898,
+        "name": "ปลายทางประตูมาลัยแมน",
+        "timeToNextSecs": 0
+      }
+    ]
+  },
+  {
+    "id": "c87ac84b-35b8-42e1-8320-f12cde158d8d",
+    "name": "สายหอใน",
+    "pathPoints": [
+      {
+        "lat": 14.0263119327051,
+        "lng": 99.9841630554675,
+        "name": "หอในหญิงขาไป",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0265099394586,
+        "lng": 99.983959614385,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0265463893745,
+        "lng": 99.9828976910718,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0264578042906,
+        "lng": 99.982886776369,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0264682185553,
+        "lng": 99.9824791694407,
+        "name": "หอเอกชายขาไป",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0265879825649,
+        "lng": 99.9823236352181,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0266608823662,
+        "lng": 99.9820930155086,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0266504681102,
+        "lng": 99.9809399169615,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0267077465119,
+        "lng": 99.9807629297426,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0269056172439,
+        "lng": 99.9807200237502,
+        "name": "หอรัฐชายขาไป",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.027400293327,
+        "lng": 99.9807307502483,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0274731928701,
+        "lng": 99.9805001305388,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0274888141978,
+        "lng": 99.9800549808672,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0276189918868,
+        "lng": 99.9795615619539,
+        "name": "สหกรณ์โรงส้มขาไป",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.0277752050161,
+        "lng": 99.9792612200067,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0281917728406,
+        "lng": 99.9795401089577,
+        "name": "หอรัฐหญิงขาไป",
+        "timeToNextSecs": 120
+      },
+      {
+        "lat": 14.0281188735259,
+        "lng": 99.9796205576936,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0278689328426,
+        "lng": 99.9794382072256,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0275304710663,
+        "lng": 99.9791217755313,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0272024230218,
+        "lng": 99.9787570745954,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0267286787732,
+        "lng": 99.9782734201154,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0272441836973,
+        "lng": 99.9777370952097,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0274316397461,
+        "lng": 99.9773884840211,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0277283224658,
+        "lng": 99.9764549677383,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0277751863934,
+        "lng": 99.9751141554742,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0267488528216,
+        "lng": 99.9750933196958,
+        "name": "อบน.",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.0262651216864,
+        "lng": 99.975098065727,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0258121003354,
+        "lng": 99.9751248819723,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0258383888075,
+        "lng": 99.9746311287328,
+        "name": "หลังหอสมุด",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.0258485503623,
+        "lng": 99.9738216124515,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0255100856044,
+        "lng": 99.9737947962063,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0247706685497,
+        "lng": 99.9738323389497,
+        "name": "เกษตรอภิรมณ์",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0236511241065,
+        "lng": 99.9738055227044,
+        "name": "ตึกคณะเกษตร",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0220108514508,
+        "lng": 99.9737787064591,
+        "name": "ตึกคณะสัตวแพทย์",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.0211204128123,
+        "lng": 99.9738001594553,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0210370967396,
+        "lng": 99.9738859714403,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0210631330156,
+        "lng": 99.9747816340327,
+        "name": "ศร 4",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0210327035835,
+        "lng": 99.9756390150907,
+        "name": "ศร 2",
+        "timeToNextSecs": 150
+      },
+      {
+        "lat": 14.021042303995,
+        "lng": 99.9759669120742,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0210006459482,
+        "lng": 99.9776134295346,
+        "name": "ตึก 80 ปี",
+        "timeToNextSecs": 20
+      },
+      {
+        "lat": 14.0213866317427,
+        "lng": 99.9776023698791,
+        "name": "สหกรณ์",
+        "timeToNextSecs": 150
+      },
+      {
+        "lat": 14.0216307230981,
+        "lng": 99.9776187927836,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0216671737893,
+        "lng": 99.9759561855761,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0221222917741,
+        "lng": 99.9759561540138,
+        "name": "โรงอาหารกลาง 1",
+        "timeToNextSecs": 210
+      },
+      {
+        "lat": 14.0225940608498,
+        "lng": 99.9759776385723,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0236198809273,
+        "lng": 99.9760312710629,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.023588637744,
+        "lng": 99.9756075743874,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0237188176466,
+        "lng": 99.9756075743874,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0237031960622,
+        "lng": 99.9760902668025,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0237136104519,
+        "lng": 99.9770717413799,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0236893569616,
+        "lng": 99.9783857502574,
+        "name": "ท่ารถนนทรี",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.023673296405,
+        "lng": 99.9791797156881,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0244543744243,
+        "lng": 99.9791850789372,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0249126056244,
+        "lng": 99.9791743524391,
+        "name": "ตลาดยูคา",
+        "timeToNextSecs": 120
+      },
+      {
+        "lat": 14.0255166362623,
+        "lng": 99.9790670874579,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.025761372361,
+        "lng": 99.9790027284692,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0261258724495,
+        "lng": 99.9788471942466,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0261414938689,
+        "lng": 99.9787399292655,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0264435077685,
+        "lng": 99.9785522155485,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0267286787732,
+        "lng": 99.9782734201154,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0267975925237,
+        "lng": 99.9781767881145,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0274172395298,
+        "lng": 99.97888473699,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0277752050161,
+        "lng": 99.9792612200067,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0281917728406,
+        "lng": 99.9795401089577,
+        "name": "หอรัฐหญิงขากลับ",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0281188735259,
+        "lng": 99.9796205576936,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0278689328426,
+        "lng": 99.9794382072256,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0276984233333,
+        "lng": 99.979356702907,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0276189918868,
+        "lng": 99.9795615619539,
+        "name": "สหกรณ์โรงส้มขากลับ",
+        "timeToNextSecs": 60
+      },
+      {
+        "lat": 14.0274888141978,
+        "lng": 99.9800549808672,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0274731928701,
+        "lng": 99.9805001305388,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.027400293327,
+        "lng": 99.9807307502483,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0269056172439,
+        "lng": 99.9807200237502,
+        "name": "หอรัฐชายขากลับ",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0267077465119,
+        "lng": 99.9807629297426,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0266504681102,
+        "lng": 99.9809399169615,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0266608823662,
+        "lng": 99.9820930155086,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0265879825649,
+        "lng": 99.9823236352181,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0264682185553,
+        "lng": 99.9824791694407,
+        "name": "หอเอกชายขากลับ",
+        "timeToNextSecs": 30
+      },
+      {
+        "lat": 14.0264578042906,
+        "lng": 99.982886776369,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0265463893745,
+        "lng": 99.9828976910718,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0265099394586,
+        "lng": 99.983959614385,
+        "name": null,
+        "timeToNextSecs": null
+      },
+      {
+        "lat": 14.0263119327051,
+        "lng": 99.9841630554675,
+        "name": "หอเอกหญิงขากลับ",
+        "timeToNextSecs": 0
+      }
+    ]
+  }
+]
