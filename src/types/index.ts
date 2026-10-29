@@ -16,6 +16,9 @@ export interface MqttMessageType {
 export interface WebSocketLocationBroadcastType extends MqttMessageType {
   type: "location";
   carId: string;
+  nextStopPathIndex?: number | null;
+  originWaiting?: boolean;
+  nextStopStartedAt?: string | null;
 }
 
 export interface WebSocketAlertBroadcastType {

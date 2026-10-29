@@ -21,6 +21,8 @@ import { updateStatusFromServer } from "./modules/cars/cars.service.ts";
 import { insertNotification } from "./modules/notifications/notifications.service.ts";
 import type { DriverRedisState } from "./modules/driving-logs/driving-logs.service.ts";
 import { redisKeys } from "./services/redis-keys.ts";
+import { loadEtaData } from "./eta/eta-data.ts";
+import { updateCarEta } from "./eta/update-car-eta.ts";
 
 const VALID_STATUSES = ["active", "inactive"] as const;
 
@@ -123,6 +125,12 @@ async function bootstrap() {
   s3Service.connect();
 
   await redisService.connect(process.env.REDIS_URL!);
+  try {
+    await loadEtaData();
+  } catch (error) {
+    console.error("[ETA] : load route data error", error);
+  }
+
   mqttService.connect(process.env.MQTT_URL!, {
     username: process.env.MQTT_SERVER_USERNAME,
     password: process.env.MQTT_SERVER_PASSWORD,
@@ -168,10 +176,12 @@ async function bootstrap() {
         );
       }
 
+      const eta = updateCarEta(carId, data);
       websocketService.broadcast({
         type: "location",
         carId,
         ...data,
+        ...eta
       }); // boardcast ไปหา client ทั้งหมด
       redisService.hSet(redisKeys.car.position(carId), data); // บันทึกไว้ให้ setTinterval วนมาบันทึก logs ทุก ๆ 60 วินาที
     } catch (error) {
@@ -269,6 +279,14 @@ async function bootstrap() {
       console.error(`[WORKER] : check car position error`, error);
     }
   }, 60000);
+
+  setInterval(async () => {
+    try {
+      await loadEtaData();
+    } catch (error) {
+      console.error("[ETA] : reload route data error", error);
+    }
+  }, 300000);
 
   server.listen(process.env.PORT || 3000, () => {
     console.log(`Server is running on port ${process.env.PORT || 3000}`);
