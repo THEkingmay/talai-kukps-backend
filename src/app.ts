@@ -22,7 +22,8 @@ import { insertNotification } from "./modules/notifications/notifications.servic
 import type { DriverRedisState } from "./modules/driving-logs/driving-logs.service.ts";
 import { redisKeys } from "./services/redis-keys.ts";
 import { loadEtaData } from "./eta/eta-data.ts";
-import { updateCarEta } from "./eta/update-car-eta.ts";
+import { updateCarEta, type CarEtaResult } from "./eta/update-car-eta.ts";
+import { clearCarEtaState } from "./eta/car-eta-state.ts";
 
 const VALID_STATUSES = ["active", "inactive"] as const;
 
@@ -175,8 +176,17 @@ async function bootstrap() {
           console.error("[MQTT] Driver confirmation check failed:", err),
         );
       }
+      let eta: CarEtaResult = {
+        nextStopPathIndex: null,
+        originWaiting: false,
+        nextStopStartedAt: null,
+      };
+      if (data.status === "inactive") {
+        clearCarEtaState(carId);
+      } else {
+        eta = updateCarEta(carId, data);
+      }
 
-      const eta = updateCarEta(carId, data);
       websocketService.broadcast({
         type: "location",
         carId,
@@ -263,6 +273,7 @@ async function bootstrap() {
           await redisService.hSetField(key, "status", "inactive");
           try {
             updateStatusFromServer(carId, "inactive");
+            clearCarEtaState(carId);
           } catch (error) {
             console.error(`[WORKER] : update status error`, error);
           }
