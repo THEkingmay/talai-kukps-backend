@@ -18,6 +18,7 @@ import type { MqttMessageType } from "../../types/index.ts";
 import type { WebSocketLocationBroadcastType } from "../../types/index.ts";
 import { decryptPassword } from "./utils/mqtt-credential.ts";
 import type { Request } from "express";
+import { getCarEtaResult } from "../../eta/update-car-eta.ts";
 
 export async function getAll(req: Request): Promise<ResponseCarData[]> {
   // ตรวจสอบ req.user ถ้าเป็น แอดมินให้ส่งที่ลบกลับไปด้วย
@@ -257,7 +258,7 @@ export async function getLivePositions(): Promise<
     if (!carData || !carData.lat || !carData.lng) continue;
 
     const carId = redisKeys.car.idFromPositionKey(key);
-    results.push({ type: "location", carId, ...carData });
+    results.push({ type: "location", carId, ...carData, ...getCarEtaResult(carId) });
   }
 
   const allCarId = await db
