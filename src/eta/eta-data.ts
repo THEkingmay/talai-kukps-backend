@@ -3,7 +3,7 @@
 import * as routesService from "../modules/routes/routes.service.ts";
 import * as routePointsService from "../modules/route-points/route-points.service.ts";
 import * as carsService from "../modules/cars/cars.service.ts";
-import type { Route } from "./types.ts";
+import type { Route, RoutePoint } from "./types.ts";
 
 // routeId -> สาย พร้อมจุดบนเส้นทาง
 let routesById = new Map<string, Route>();
@@ -17,7 +17,16 @@ export async function loadEtaData(): Promise<void> {
     routePointsService.getAll(),
     carsService.getActiveCarRoutes(),
   ]);
+  applyEtaData(routeRows, pointRows, carRows);
+}
 
+// จัดแถวจาก database ลง Map แยกจาก loadEtaData เพื่อให้เทสต์ส่งข้อมูลเข้ามาเองได้
+// โดยไม่ต้องต่อ database
+export function applyEtaData(
+  routeRows: { id: string; name: string }[],
+  pointRows: (RoutePoint & { routeId: string })[],
+  carRows: { id: string; routeId: string | null }[],
+): void {
   // สายที่ยังไม่ถูกลบ เริ่มด้วยเส้นทางว่าง
   const nextRoutes = new Map<string, Route>();
   for (const route of routeRows) {
