@@ -270,8 +270,12 @@ export async function getLivePositions(): Promise<
     allCarId.some((c) => c.id === car.carId && c.is_deleted === null),
   );
 
+  // เทียบกับ results แทน keys เพราะ key ใน Redis เป็น car:position:{carId}
+  // และรถที่มี key แต่ไม่มีพิกัดถูกข้ามไปแล้ว ต้องไปดึงจาก DB เหมือนกัน
   const filterCarNotInRedisAndNotDeleted = allCarId.filter(
-    (car) => !keys.includes(`car:${car.id}`) && car.is_deleted === null,
+    (car) =>
+      !results.some((result) => result.carId === car.id) &&
+      car.is_deleted === null,
   );
   const filterCarNotInRedisAndNotDeletedIds =
     filterCarNotInRedisAndNotDeleted.map((car) => car.id);
