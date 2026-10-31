@@ -18,6 +18,7 @@ import type { MqttMessageType } from "../../types/index.ts";
 import type { WebSocketLocationBroadcastType } from "../../types/index.ts";
 import { decryptPassword } from "./utils/mqtt-credential.ts";
 import type { Request } from "express";
+import { getCarEtaResult } from "../../eta/update-car-eta.ts";
 
 export async function getAll(req: Request): Promise<ResponseCarData[]> {
   // ตรวจสอบ req.user ถ้าเป็น แอดมินให้ส่งที่ลบกลับไปด้วย
@@ -88,6 +89,19 @@ export async function getAll(req: Request): Promise<ResponseCarData[]> {
     .where(isNull(cars.deletedAt))
     .orderBy(cars.createdAt);
   return carList;
+}
+
+// รถที่ยังไม่ถูกลบ พร้อมสายที่ Admin กำหนด สำหรับใช้ภายใน server (เช่น ตัวรับ MQTT) ซึ่งไม่มี request
+export async function getActiveCarRoutes(): Promise<
+  { id: string; routeId: string | null }[]
+> {
+  return db
+    .select({
+      id: cars.id,
+      routeId: cars.routeId,
+    })
+    .from(cars)
+    .where(isNull(cars.deletedAt));
 }
 
 export async function getById(
@@ -244,7 +258,7 @@ export async function getLivePositions(): Promise<
     if (!carData || !carData.lat || !carData.lng) continue;
 
     const carId = redisKeys.car.idFromPositionKey(key);
-    results.push({ type: "location", carId, ...carData });
+    results.push({ type: "location", carId, ...carData, ...getCarEtaResult(carId) });
   }
 
   const allCarId = await db
@@ -256,8 +270,12 @@ export async function getLivePositions(): Promise<
     allCarId.some((c) => c.id === car.carId && c.is_deleted === null),
   );
 
+  // เทียบกับ results แทน keys เพราะ key ใน Redis เป็น car:position:{carId}
+  // และรถที่มี key แต่ไม่มีพิกัดถูกข้ามไปแล้ว ต้องไปดึงจาก DB เหมือนกัน
   const filterCarNotInRedisAndNotDeleted = allCarId.filter(
-    (car) => !keys.includes(`car:${car.id}`) && car.is_deleted === null,
+    (car) =>
+      !results.some((result) => result.carId === car.id) &&
+      car.is_deleted === null,
   );
   const filterCarNotInRedisAndNotDeletedIds =
     filterCarNotInRedisAndNotDeleted.map((car) => car.id);

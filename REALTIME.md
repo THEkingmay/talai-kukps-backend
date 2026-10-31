@@ -89,18 +89,26 @@ ws://localhost:3000/
   "lat": 18.7883,
   "lng": 98.9853,
   "status": "active",
-  "createdAt": "2025-01-16T04:30:00.000Z"
+  "createdAt": "2025-01-16T04:30:00.000Z",
+  "nextStopPathIndex": 12,
+  "originWaiting": false,
+  "nextStopStartedAt": "2025-01-16T04:29:40.000Z"
 }
 ```
 
-| Field       | Type                       | หมายเหตุ                           |
-| ----------- | -------------------------- | ---------------------------------- |
-| `type`      | `"location"`               | ใช้แยกประเภทข้อความ                |
-| `carId`     | uuid                       | มาจาก MQTT topic ไม่ใช่จาก payload |
-| `lat`       | number                     | ⚠️ จาก Redis อาจเป็น string        |
-| `lng`       | number                     | ⚠️ จาก Redis อาจเป็น string        |
-| `status`    | `"active"` \| `"inactive"` | มาจาก payload ที่รถส่งมา           |
-| `createdAt` | ISO8601                    | server ใส่ให้ ไม่ใช่ข้อมูลจากรถ    |
+| Field               | Type                       | หมายเหตุ                                                                 |
+| ------------------- | -------------------------- | ------------------------------------------------------------------------ |
+| `type`              | `"location"`               | ใช้แยกประเภทข้อความ                                                      |
+| `carId`             | uuid                       | มาจาก MQTT topic ไม่ใช่จาก payload                                       |
+| `lat`               | number                     | ⚠️ จาก Redis อาจเป็น string                                              |
+| `lng`               | number                     | ⚠️ จาก Redis อาจเป็น string                                              |
+| `status`            | `"active"` \| `"inactive"` | มาจาก payload ที่รถส่งมา                                                 |
+| `createdAt`         | ISO8601                    | server ใส่ให้ ไม่ใช่ข้อมูลจากรถ                                          |
+| `nextStopPathIndex` | number \| null             | index ของป้ายถัดไปใน route points ของสาย (เริ่มที่ 0), `null` = ไม่รู้ป้าย |
+| `originWaiting`     | boolean                    | `true` = รถจอดรอที่ป้ายแรก (นิ่งในรัศมี 30 ม. เกิน 6 วินาที)             |
+| `nextStopStartedAt` | ISO8601 \| null            | เวลาที่เริ่มมุ่งหน้าไปป้ายถัดไป ใช้นับเวลาถอยหลัง, `null` = จอดรอ/ไม่รู้ป้าย |
+
+3 field สุดท้าย server คำนวณจากตำแหน่งรถ (โค้ดอยู่ใน `src/eta`) จะได้ `null` / `false` เมื่อรถยังไม่ได้กำหนดสาย อยู่ห่างเส้นทางเกิน 100 ม. หรือ `status` เป็น `"inactive"`
 
 #### `type: "alert"` — รถวิ่งแต่คนขับยังไม่กดเริ่มงาน
 

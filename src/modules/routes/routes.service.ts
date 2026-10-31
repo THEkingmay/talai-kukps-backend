@@ -20,6 +20,16 @@ export async function getAll(req: Request): Promise<Route[]> {
     .orderBy(routes.createdAt);
 }
 
+// สายที่ยังไม่ถูกลบ สำหรับใช้ภายใน server (เช่น ตัวรับ MQTT) ซึ่งไม่มี request
+  export async function getActiveRoutes(): Promise<Route[]> 
+  {
+    return db
+      .select()
+      .from(routes)
+      .where(isNull(routes.deletedAt))
+      .orderBy(routes.createdAt);
+  }
+
 export async function getById(id: string, req: Request): Promise<Route | null> {
   if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
     const [route] = await db

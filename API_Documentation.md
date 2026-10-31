@@ -783,7 +783,10 @@ curl -b cookies.txt http://localhost:3000/cars/live-positions
       "lat": 18.7883,
       "lng": 98.9853,
       "status": "active",
-      "createdAt": "2025-01-16T04:30:00.000Z"
+      "createdAt": "2025-01-16T04:30:00.000Z",
+      "nextStopPathIndex": 12,
+      "originWaiting": false,
+      "nextStopStartedAt": "2025-01-16T04:29:40.000Z"
     }
   ]
 }
@@ -794,6 +797,7 @@ curl -b cookies.txt http://localhost:3000/cars/live-positions
 - รถที่ถูก soft delete จะถูกกรองออก
 - ถ้ารถไม่มีข้อมูลใน Redis (เช่น server เพิ่ง restart) → ระบบไปดึงจาก `car_history_log` ล่าสุดใน DB มาแทน โดยบังคับ `status: "inactive"`
 - ⚠️ **`lat` / `lng` อาจได้เป็น string** เพราะ Redis hash คืนค่าเป็น string แม้ TypeScript จะประกาศเป็น `number` — ต้อง `Number()` ก่อนใช้กับแผนที่
+- `nextStopPathIndex` / `originWaiting` / `nextStopStartedAt` คือข้อมูลป้ายถัดไปที่ server คำนวณไว้ (ความหมายดูที่ `REALTIME.md` หัวข้อ `type: "location"`) — รถที่ดึงมาจาก `car_history_log` จะ**ไม่มี** 3 field นี้
 
 ---
 
